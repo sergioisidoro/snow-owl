@@ -29,6 +29,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @since 3.4
  */
 public class SnomedCoreConfiguration {
+	
+	public enum IdGenerationStrategy {
+		INTERNAL, //Snow Owl's internal random id generator
+		EXTERNAL_IHTSDO //IHTSDO's external id generator
+	}
 
 	public static final String ELK_REASONER_ID = "org.semanticweb.elk.elk.reasoner.factory"; //$NON-NLS-1$
 	private static final String DEFAULT_REASONER = ELK_REASONER_ID;
@@ -53,6 +58,19 @@ public class SnomedCoreConfiguration {
 	
 	@NotNull
 	private String defaultNamespace = DEFAULT_NAMESPACE;
+	
+	//IHTSDO's external Id generation configuration
+	@JsonProperty("idGenerationStrategy")
+	private IdGenerationStrategy idGenerationStrategy = IdGenerationStrategy.INTERNAL;
+	
+	@JsonProperty("externalIdGeneratorUrl")
+	private String externalIdGeneratorUrl;
+	
+	@JsonProperty("externalIdGeneratorPort")
+	private String externalIdGeneratorPort;
+	
+	@JsonProperty("externalIdGeneratorContextRoot")
+	private String externalIdGeneratorContextRoot;
 	
 	private boolean concreteDomainSupport;
 	private boolean showReasonerUsageWarning = true;
@@ -155,6 +173,50 @@ public class SnomedCoreConfiguration {
 	@JsonProperty("showReasonerUsageWarning")
 	public void setShowReasonerUsageWarningEnabled(boolean showReasonerUsageWarning) {
 		this.showReasonerUsageWarning = showReasonerUsageWarning;
+	}
+
+	public IdGenerationStrategy getIdGenerationStrategy() {
+		return idGenerationStrategy;
+	}
+
+	public void setIdGenerationStrategy(IdGenerationStrategy idGenerationStrategy) {
+		this.idGenerationStrategy = idGenerationStrategy;
+	}
+
+	/**
+	 * Returns the root URL of the external id generator REST service
+	 * @return
+	 */
+	public String getExternalIdGeneratorUrl() {
+		return externalIdGeneratorUrl;
+	}
+
+	public void setExternalIdGeneratorUrl(String externalIdGeneratorUrl) {
+		this.externalIdGeneratorUrl = externalIdGeneratorUrl;
+	}
+
+	/**
+	 * Returns the port of the external id generator REST service
+	 * @return
+	 */
+	public String getExternalIdGeneratorPort() {
+		return externalIdGeneratorPort;
+	}
+
+	public void setExternalIdGeneratorPort(String externalIdGeneratorPort) {
+		this.externalIdGeneratorPort = externalIdGeneratorPort;
+	}
+
+	/**
+	 * Returns the context root of the external id generator's REST URL
+	 * @return
+	 */
+	public String getExternalIdGeneratorContextRoot() {
+		return externalIdGeneratorContextRoot;
+	}
+
+	public void setExternalIdGeneratorContextRoot(String externalIdGeneratorContextRoot) {
+		this.externalIdGeneratorContextRoot = externalIdGeneratorContextRoot;
 	}
 	
 }
