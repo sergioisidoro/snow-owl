@@ -134,10 +134,8 @@ public class ConfigurationFactory<T> {
 	}
 	
 	/**
-     * Loads, parses, binds, then return a configuration object from a file.
+     * Loads, parses, binds, then returns a default configuration object.
      *
-     * @param provider - the provider to to use for reading configuration files
-     * @param path     - the path of the configuration file
      * @return a configuration object
      * @throws RuntimeException            if there is an error reading or parsing the file
      */
