@@ -31,7 +31,7 @@ import com.google.common.base.Strings;
  * Registers a {@link ILanguageConfigurationProvider language configuration provider}.
  * 
  */
-public class LanguageConfigurationProviderConfigJob extends ServiceConfigJob{
+public class LanguageConfigurationProviderConfigJob extends ServiceConfigJob {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LanguageConfigurationProviderConfigJob.class);
 	private static final String LANGUAGE_PREFIX = "en-"; //$NON-NLS-1$
