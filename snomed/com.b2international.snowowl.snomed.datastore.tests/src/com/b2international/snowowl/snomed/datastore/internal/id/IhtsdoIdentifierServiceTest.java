@@ -99,9 +99,9 @@ public class IhtsdoIdentifierServiceTest {
 
 	@Before
 	public void loginTest() {
+		System.out.println("------------ Logging in ------------");
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "login");
-		System.out.println("----------------------------------------");
 		System.out.println("Executing request: " + httpPost.getRequestLine());
 
 		try {
@@ -128,7 +128,7 @@ public class IhtsdoIdentifierServiceTest {
 		
 	}
 	
-	//@Test
+	@Test
 	public void namespacesTest() {
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet httpGet = new HttpGet(SERVICE_URL + "/users/" + USERNAME + "/namespaces?"
@@ -166,11 +166,9 @@ public class IhtsdoIdentifierServiceTest {
 			
 			System.out.println(response.getStatusLine());
 			
-			jsonTokenString = EntityUtils.toString(response.getEntity());
-			ObjectMapper mapper = new ObjectMapper();
-			String responseString = mapper.readValue(jsonTokenString, String.class);
+			String conceptId = EntityUtils.toString(response.getEntity());
 			
-			System.out.println("Response: " + responseString);
+			System.out.println("ConceptId: " + conceptId);
 			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -187,6 +185,7 @@ public class IhtsdoIdentifierServiceTest {
 	 */
 	private String getGenerationDataString() throws JsonProcessingException {
 		GenerationData generationData = new GenerationData();
+		generationData.setNamespace(12345);
 		generationData.setPartitionId("01");
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(generationData);
@@ -194,10 +193,10 @@ public class IhtsdoIdentifierServiceTest {
 
 	@After
 	public void logoutTest() {
+		System.out.println("------------------ Logging out ------------------");
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "logout");
 
-		System.out.println("----------------------------------------");
 		System.out.println("Executing request: " + httpPost.getRequestLine());
 		try {
 			System.out.println("Token: " + jsonTokenString);
