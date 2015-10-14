@@ -161,7 +161,7 @@ public class ConfigurationFactory<T> {
     	} catch (InvalidFormatException e) {
     		String sourceType = e.getValue().getClass().getSimpleName();
     		String targetType = e.getTargetType().getSimpleName();
-    		throw new RuntimeException(String.format("Incorrect type of value %s, expected %s in config file '%s'", sourceType, targetType, path));
+    		throw new RuntimeException(String.format("Incorrect type of value %s, expected %s in config file '%s'", sourceType, targetType, path), e);
     	} catch (JsonMappingException e) {
     		throw new RuntimeException("Failed to parse configuration at " + path + " for class: " + klass, e);
     	}
