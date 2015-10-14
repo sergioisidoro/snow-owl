@@ -25,9 +25,10 @@ import org.junit.Test;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.SnomedConstants.Concepts;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifiers;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnowOwlSnomedIdentifierGenerator;
 
 /**
  * @since 4.0
@@ -37,9 +38,9 @@ public class ReservationImplTest {
 	@Test
 	public void whenReservingSingleID_ThenItShouldConflictWithThatIDOnly() throws Exception {
 		final Reservation single = Reservations.single(Concepts.ROOT_CONCEPT);
-		assertTrue(single.includes(SnomedIdentifiers.of(Concepts.ROOT_CONCEPT)));
-		assertFalse(single.includes(SnomedIdentifiers.of(Concepts.FULLY_DEFINED)));
-		assertFalse(single.includes(SnomedIdentifiers.of(Concepts.ADDITIONAL_RELATIONSHIP)));
+		assertTrue(single.includes(SnomedIdentifier.of(Concepts.ROOT_CONCEPT)));
+		assertFalse(single.includes(SnomedIdentifier.of(Concepts.FULLY_DEFINED)));
+		assertFalse(single.includes(SnomedIdentifier.of(Concepts.ADDITIONAL_RELATIONSHIP)));
 	}
 	
 	@Test
@@ -47,7 +48,7 @@ public class ReservationImplTest {
 		final Set<ComponentCategory> components = Collections.singleton(ComponentCategory.CONCEPT);
 		final Reservation range = Reservations.range(200, 300, null, components);
 		for (int i = 200; i <= 300; i++) {
-			assertTrue(range.includes(SnomedIdentifiers.generateFrom(i, ComponentCategory.CONCEPT)));
+			assertTrue(range.includes(SnowOwlSnomedIdentifierGenerator.generateFrom(i, ComponentCategory.CONCEPT)));
 		}
 	}
 	

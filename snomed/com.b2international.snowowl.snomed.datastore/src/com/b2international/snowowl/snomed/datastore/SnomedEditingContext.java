@@ -94,8 +94,8 @@ import com.b2international.snowowl.snomed.Relationship;
 import com.b2international.snowowl.snomed.SnomedFactory;
 import com.b2international.snowowl.snomed.SnomedPackage;
 import com.b2international.snowowl.snomed.datastore.NormalFormWrapper.AttributeConceptGroupWrapper;
-import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierService;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
 import com.b2international.snowowl.snomed.datastore.index.SnomedClientIndexService;
@@ -132,7 +132,7 @@ import com.google.common.collect.Sets;
  */
 public class SnomedEditingContext extends BaseSnomedEditingContext {
 
-	private ISnomedIdentifierService identifiers = ApplicationContext.getInstance().getServiceChecked(ISnomedIdentifierService.class);
+	private ISnomedIdentifierGenerator identifiers = ApplicationContext.getInstance().getServiceChecked(ISnomedIdentifierGenerator.class);
 	private ISnomedIdentiferReservationService reservations = ApplicationContext.getInstance().getServiceChecked(ISnomedIdentiferReservationService.class);
 	
 	private SnomedRefSetEditingContext refSetEditingContext;
@@ -1675,7 +1675,7 @@ public class SnomedEditingContext extends BaseSnomedEditingContext {
 	 * @see #getNamespace()
 	 * @throws NullPointerException
 	 *             - if the given component was <code>null</code>.
-	 * @deprecated - use new {@link ISnomedIdentifierService}
+	 * @deprecated - use new {@link ISnomedIdentifierGenerator}
 	 */
 	public String generateComponentId(Component component) {
 		if (component instanceof Relationship) {
@@ -1692,7 +1692,7 @@ public class SnomedEditingContext extends BaseSnomedEditingContext {
 		return identifiers.generateId(componentNature, namespace);
 	}
 	
-	public boolean isUniqueInTransaction(SnomedIdentifier identifier) {
+	public boolean isUniqueInTransaction(ISnomedIdentifier identifier) {
 		return !newComponentIds.contains(identifier.toString());
 	}
 

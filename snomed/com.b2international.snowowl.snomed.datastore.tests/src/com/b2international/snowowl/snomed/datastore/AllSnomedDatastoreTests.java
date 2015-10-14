@@ -19,7 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifierServiceImplTest;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnowOwlSnomedIdentifierGeneratorTest;
 import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifierTest;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.ReservationImplTest;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SnomedIdentifierReservationServiceImplTest;
@@ -31,7 +31,7 @@ import com.b2international.snowowl.snomed.datastore.internal.id.reservations.Sno
 @SuiteClasses({
 	ReservationImplTest.class,
 	SnomedIdentifierTest.class,
-	SnomedIdentifierServiceImplTest.class,
+	SnowOwlSnomedIdentifierGeneratorTest.class,
 	SnomedIdentifierReservationServiceImplTest.class
 })
 public class AllSnomedDatastoreTests {

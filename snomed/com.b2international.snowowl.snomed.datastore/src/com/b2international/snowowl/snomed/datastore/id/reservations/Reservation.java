@@ -15,7 +15,7 @@
  */
 package com.b2international.snowowl.snomed.datastore.id.reservations;
 
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 
 /**
  * Represents a SNOMEDT CT Identifier reservation. A reservation is a range of SNOMED CT Identifiers, which are reserved for later use, therefore they
@@ -31,6 +31,6 @@ public interface Reservation {
 	 * @param identifier
 	 * @return
 	 */
-	boolean includes(SnomedIdentifier identifier);
+	boolean includes(ISnomedIdentifier identifier);
 
 }

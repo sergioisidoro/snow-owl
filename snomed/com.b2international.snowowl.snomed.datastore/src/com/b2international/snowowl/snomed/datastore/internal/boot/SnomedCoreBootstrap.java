@@ -24,10 +24,10 @@ import com.b2international.snowowl.core.setup.ModuleConfig;
 import com.b2international.snowowl.eventbus.IEventBus;
 import com.b2international.snowowl.snomed.datastore.SnomedTerminologyBrowser;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
-import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierService;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
-import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifierServiceImpl;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnowOwlSnomedIdentifierGenerator;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SnomedIdentifierReservationServiceImpl;
 import com.b2international.snowowl.snomed.metadata.SnomedMetadata;
 import com.b2international.snowowl.snomed.metadata.SnomedMetadataImpl;
@@ -46,9 +46,9 @@ public class SnomedCoreBootstrap extends DefaultBootstrapFragment {
 		final Provider<SnomedTerminologyBrowser> browser = env.provider(SnomedTerminologyBrowser.class);
 		final ISnomedIdentiferReservationService reservationService = new SnomedIdentifierReservationServiceImpl();
 		reservationService.create(STORE_RESERVATIONS, Reservations.uniqueInStore(browser));
-		final ISnomedIdentifierService idService = new SnomedIdentifierServiceImpl(reservationService);
+		final ISnomedIdentifierGenerator idGenerator = new SnowOwlSnomedIdentifierGenerator(reservationService);
 		env.services().registerService(ISnomedIdentiferReservationService.class, reservationService);
-		env.services().registerService(ISnomedIdentifierService.class, idService);
+		env.services().registerService(ISnomedIdentifierGenerator.class, idGenerator);
 		env.services().registerService(SnomedCoreConfiguration.class, configuration.getModuleConfig(SnomedCoreConfiguration.class));
 		env.services().registerService(SnomedMetadata.class, new SnomedMetadataImpl(env.provider(SnomedTerminologyBrowser.class)));
 	}
@@ -59,7 +59,7 @@ public class SnomedCoreBootstrap extends DefaultBootstrapFragment {
 		// It would be nice to use a framework like reactor
 		// Also if we stick with the current IEventBus impl, we should definitely implement routers
 		if (env.isServer() || env.isEmbedded()) {
-			env.service(IEventBus.class).registerHandler("/snomed-ct/ids", new SnomedIdentifierServiceEventHandler(env.provider(ISnomedIdentifierService.class)));
+			env.service(IEventBus.class).registerHandler("/snomed-ct/ids", new SnomedIdentifierServiceEventHandler(env.provider(ISnomedIdentifierGenerator.class)));
 		}
 	}
 

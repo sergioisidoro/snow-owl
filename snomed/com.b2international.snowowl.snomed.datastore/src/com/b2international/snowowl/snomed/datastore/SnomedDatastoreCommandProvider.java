@@ -26,7 +26,7 @@ import com.b2international.commons.StringUtils;
 import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
-import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration.IdGenerationStrategy;
+import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration.IdGenerationSource;
 
 /**
  * OSGI command contribution with command to test IHTSDO's external Id
@@ -69,14 +69,13 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 		SnowOwlConfiguration snowOwlConfiguration = SnowOwlApplication.INSTANCE.getConfiguration();
 		SnomedCoreConfiguration coreConfiguration = snowOwlConfiguration.getModuleConfig(SnomedCoreConfiguration.class);
 		
-		IdGenerationStrategy idGenerationStrategy = coreConfiguration.getIdGenerationStrategy();
-		if (idGenerationStrategy == null) {
-			ci.println("Id generation strategy is not set in the configuration file.");
+		IdGenerationSource idGenerationSource = coreConfiguration.getIdGenerationSource();
+		if (idGenerationSource == null) {
+			ci.println("Id generation source is not set in the configuration file.");
 			return;
 		}
-		
-		if (idGenerationStrategy == IdGenerationStrategy.INTERNAL) {
-			ci.println("Status: OK.\nId generation startegy is set to INTERNAL.");
+		if (idGenerationSource == IdGenerationSource.INTERNAL) {
+			ci.println("Status: OK.\nId generation source is set to INTERNAL.");
 			return;
 		}
 		
@@ -95,12 +94,13 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 				httpGet = new HttpGet(externalIdGeneratorUrl + ":" + externalIdGeneratorPort 
 						+ "/" + externalIdGeneratorContextRoot + "/testService");
 			}
+			ci.println("Request: " + httpGet.getRequestLine());
 			HttpResponse response = httpClient.execute(httpGet);
 			ci.println("---------------------------------------------------------");
 			ci.println(response.getStatusLine());
 			ci.println("Response: " + EntityUtils.toString(response.getEntity()));
 		} catch (final Throwable t) {
-			ci.print("Error: " + t.getMessage());
+			ci.println("Error: " + t.getMessage());
 		} finally {
 			httpGet.releaseConnection();
 			httpClient.getConnectionManager().shutdown();

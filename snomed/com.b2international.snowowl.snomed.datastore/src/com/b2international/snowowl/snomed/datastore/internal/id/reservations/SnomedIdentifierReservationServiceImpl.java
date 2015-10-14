@@ -25,10 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.b2international.snowowl.core.api.SnowowlRuntimeException;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifiers;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifier;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -77,7 +77,7 @@ public class SnomedIdentifierReservationServiceImpl implements ISnomedIdentiferR
 
 	@Override
 	public boolean isReserved(String componentId) {
-		final SnomedIdentifier identifier = SnomedIdentifiers.of(componentId);
+		final ISnomedIdentifier identifier = SnomedIdentifier.of(componentId);
 		for (Reservation reservation : getReservations()) {
 			if (reservation.includes(identifier)) {
 				return true;

@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.b2international.snowowl.datastore.BranchPathUtils;
 import com.b2international.snowowl.snomed.datastore.SnomedTerminologyBrowser;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
 import com.google.inject.Provider;
 
@@ -37,7 +37,7 @@ public class UniqueInStoreReservation implements Reservation {
 	}
 	
 	@Override
-	public boolean includes(SnomedIdentifier identifier) {
+	public boolean includes(ISnomedIdentifier identifier) {
 		return !browser.get().isUniqueId(BranchPathUtils.createMainPath(), identifier.toString());
 	}
 

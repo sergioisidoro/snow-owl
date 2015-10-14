@@ -15,16 +15,19 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.b2international.commons.VerhoeffCheck;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.google.common.base.Strings;
 
 /**
- * Representing a SNOMED CT Identifier in a Java POJO form, extracts parts of the SNOMED CT Identifer and stores them for later use.
+ * Representing a SNOMED CT Identifier in a Java POJO form, extracts parts of the SNOMED CT Identifier and stores them for later use.
  * 
  * @since 4.0
  */
-public final class SnomedIdentifierImpl implements SnomedIdentifier {
+public final class SnomedIdentifier implements ISnomedIdentifier {
 
 	private String id;
 	private long itemId;
@@ -33,7 +36,7 @@ public final class SnomedIdentifierImpl implements SnomedIdentifier {
 	private int componentIdentifier;
 	private int checkDigit;
 
-	public SnomedIdentifierImpl(final long itemId, final String namespace, final int partitionIdentifier, final int componentIdentifier,
+	public SnomedIdentifier(final long itemId, final String namespace, final int partitionIdentifier, final int componentIdentifier,
 			final int checkDigit) {
 		this.itemId = itemId;
 		this.namespace = namespace;
@@ -41,7 +44,50 @@ public final class SnomedIdentifierImpl implements SnomedIdentifier {
 		this.componentIdentifier = componentIdentifier;
 		this.checkDigit = checkDigit;
 	}
-
+	
+	/**
+	 * Creates a {@link SnomedIdentifier} from the given {@link String} componentId.
+	 * 
+	 * @param componentId
+	 * @return
+	 */
+	public static ISnomedIdentifier of(String componentId) {
+		validate(componentId);
+		final int checkDigit = Character.getNumericValue(componentId.charAt(componentId.length() - 1));
+		final int componentIdentifier = Character.getNumericValue(componentId.charAt(componentId.length() - 2));
+		final int partitionIdentifier = Character.getNumericValue(componentId.charAt(componentId.length() - 3));
+		final String namespace = partitionIdentifier == 0 ? null : componentId.substring(componentId.length() - 10, componentId.length() - 3);
+		final long itemId = partitionIdentifier == 0 ? Long.parseLong(componentId.substring(0, componentId.length() - 3)) : Long
+				.parseLong(componentId.substring(0, componentId.length() - 10));
+		return new SnomedIdentifier(itemId, namespace, partitionIdentifier, componentIdentifier, checkDigit);
+	}
+	
+	/**
+	 * Validates the given componentId by using the rules defined in the latest SNOMED CT Identifier specification, which are the following constraints:
+	 * <ul>
+	 * 	<li>Can't start with leading zeros</li>
+	 * 	<li>Lengths should be between 6 and 18 characters</li>
+	 * 	<li>Should parse to a long value</li>
+	 * 	<li>Should pass the Verhoeff check-digit test</li>
+	 * </ul>
+	 * 
+	 * @param componentId
+	 * @see VerhoeffCheck
+	 * @throws IllegalArgumentException - if the given componentId is invalid according to the SNOMED CT Identifier specification
+	 */
+	public static void validate(String componentId) throws IllegalArgumentException {
+		checkArgument(!Strings.isNullOrEmpty(componentId), "ComponentId must be defined");
+		checkArgument(!componentId.startsWith("0"), "ComponentId can't start with leading zeros");
+		checkArgument(componentId.length() >= 6 && componentId.length() <= 18, "ComponentId's length should be between 6-18 character length");
+		try {
+			Long.parseLong(componentId);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("ComponentId should parse to a Long");
+		}
+		checkArgument(VerhoeffCheck.validateLastChecksumDigit(componentId), "ComponentId should pass Verhoeff check-digit test");
+	}
+	
+	
 	public long getItemId() {
 		return itemId;
 	}

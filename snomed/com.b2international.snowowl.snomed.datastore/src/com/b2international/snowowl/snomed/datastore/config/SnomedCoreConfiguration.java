@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class SnomedCoreConfiguration {
 	
-	public enum IdGenerationStrategy {
+	public enum IdGenerationSource {
 		INTERNAL, //Snow Owl's internal random id generator
 		EXTERNAL_IHTSDO //IHTSDO's external id generator
 	}
@@ -60,8 +60,8 @@ public class SnomedCoreConfiguration {
 	private String defaultNamespace = DEFAULT_NAMESPACE;
 	
 	//IHTSDO's external Id generation configuration
-	@JsonProperty("idGenerationStrategy")
-	private IdGenerationStrategy idGenerationStrategy = IdGenerationStrategy.INTERNAL;
+	@JsonProperty("idGenerationSource")
+	private IdGenerationSource idGenerationSource = IdGenerationSource.INTERNAL;
 	
 	@JsonProperty("externalIdGeneratorUrl")
 	private String externalIdGeneratorUrl;
@@ -175,12 +175,12 @@ public class SnomedCoreConfiguration {
 		this.showReasonerUsageWarning = showReasonerUsageWarning;
 	}
 
-	public IdGenerationStrategy getIdGenerationStrategy() {
-		return idGenerationStrategy;
+	public IdGenerationSource getIdGenerationSource() {
+		return idGenerationSource;
 	}
 
-	public void setIdGenerationStrategy(IdGenerationStrategy idGenerationStrategy) {
-		this.idGenerationStrategy = idGenerationStrategy;
+	public void setIdGenerationSource(IdGenerationSource idGenerationSource) {
+		this.idGenerationSource = idGenerationSource;
 	}
 
 	/**

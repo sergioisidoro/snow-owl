@@ -29,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
-import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierService;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 import com.b2international.snowowl.snomed.datastore.id.gen.ItemIdGenerationStrategy;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
@@ -41,9 +41,9 @@ import com.google.common.collect.Iterables;
  * @since 4.0
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SnomedIdentifierServiceImplTest {
+public class SnowOwlSnomedIdentifierGeneratorTest {
 
-	private ISnomedIdentifierService ids;
+	private ISnomedIdentifierGenerator identifierGenerator;
 	
 	private ISnomedIdentiferReservationService reservations = new SnomedIdentifierReservationServiceImpl();
 	
@@ -52,7 +52,7 @@ public class SnomedIdentifierServiceImplTest {
 
 	@Before
 	public void givenIdentifierService() {
-		this.ids = new SnomedIdentifierServiceImpl(reservations, itemIdGenerationStrategy);
+		this.identifierGenerator = new SnowOwlSnomedIdentifierGenerator(reservations, itemIdGenerationStrategy);
 	}
 
 	@Test
@@ -64,7 +64,7 @@ public class SnomedIdentifierServiceImplTest {
 			}
 		})) {
 			try {
-				ids.generateId(category);
+				identifierGenerator.generateId(category);
 				fail("IllegalArgumentException should be thrown in case of unrecognized ComponentCategory " + category);
 			} catch (IllegalArgumentException e) {
 				// ignore, this is expected to be throw
@@ -76,7 +76,7 @@ public class SnomedIdentifierServiceImplTest {
 	public void whenReservingARangeOfIDs_ThenItShouldDisallowAnyIDToBeGeneratedFromThatRange() throws Exception {
 		this.reservations.create("range_100_102", Reservations.range(100L, 102L, null, Collections.singleton(ComponentCategory.CONCEPT)));
 		when(itemIdGenerationStrategy.generateItemId()).thenReturn("100", "101", "102", "103");
-		final String id = ids.generateId(ComponentCategory.CONCEPT);
+		final String id = identifierGenerator.generateId(ComponentCategory.CONCEPT);
 		assertThat(id).startsWith("103");
 	}
 	

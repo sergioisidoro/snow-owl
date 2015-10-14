@@ -18,7 +18,7 @@ package com.b2international.snowowl.snomed.datastore.internal.id.reservations;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.b2international.snowowl.snomed.datastore.SnomedEditingContext;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
 
@@ -40,7 +40,7 @@ public class UniqueInTransactionReservation implements Reservation {
 	}
 
 	@Override
-	public boolean includes(SnomedIdentifier identifier) {
+	public boolean includes(ISnomedIdentifier identifier) {
 		return !context.isUniqueInTransaction(identifier);
 	}
 }

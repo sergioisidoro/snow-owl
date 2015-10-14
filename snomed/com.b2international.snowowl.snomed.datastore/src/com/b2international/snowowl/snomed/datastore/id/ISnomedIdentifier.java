@@ -18,20 +18,52 @@ package com.b2international.snowowl.snomed.datastore.id;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 
 /**
+ * Interface to representing a SNOMED CT identifier.
+ * The SNOMED CT id is a multi part id with parts such as:
+ * 
+ * Extension - namespace - partition - check-digit
+ * More on SNOMED CT ids see 
+ * {@link http://ihtsdo.org/fileadmin/user_upload/doc/download/doc_TechnicalImplementationGuide_Current-en-US_INT_20140813.pdf?ok}
+ * 
  * @since 4.0
  */
-public interface SnomedIdentifier {
+public interface ISnomedIdentifier {
 
+	/**
+	 * Returns the item id part of this id
+	 * @return
+	 */
 	public long getItemId();
 
+	/**
+	 * Returns the namespace of this id
+	 * @return
+	 */
 	public String getNamespace();
 
+	/**
+	 * Returns the partition id of this id
+	 * @return
+	 */
 	public int getPartitionIdentifier();
 
+	/**
+	 * Returns the single digit checksum of this id
+	 * @return
+	 */
+	public int getCheckDigit();
+	
+	/**
+	 * Returns the internal component identifier of this id
+	 * @return
+	 */
 	public int getComponentIdentifier();
 
-	public int getCheckDigit();
-
+	/**
+	 * Returns the component category (e.g. concept, relationship, etc.)
+	 * of the component represented by this id
+	 * @return
+	 */
 	public ComponentCategory getComponentCategory();
 	
 }

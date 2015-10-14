@@ -21,20 +21,20 @@ import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.eventbus.IHandler;
 import com.b2international.snowowl.eventbus.IMessage;
 import com.b2international.snowowl.snomed.core.events.SnomedIdentifierRequestEvent;
-import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierService;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 import com.google.inject.Provider;
 
 /**
- * Event delegator implementation on top of {@link ISnomedIdentifierService} interface.
- * Delegates {@link SnomedIdentifierRequestEvent}s to {@link ISnomedIdentifierService#generateId(ComponentCategory)}
+ * Event delegator implementation on top of {@link ISnomedIdentifierGenerator} interface.
+ * Delegates {@link SnomedIdentifierRequestEvent}s to {@link ISnomedIdentifierGenerator#generateId(ComponentCategory)}
  * 
  * @since 4.0
  */
 public class SnomedIdentifierServiceEventHandler implements IHandler<IMessage> {
 
-	private Provider<ISnomedIdentifierService> identifierService;
+	private Provider<ISnomedIdentifierGenerator> identifierService;
 
-	public SnomedIdentifierServiceEventHandler(Provider<ISnomedIdentifierService> identifierService) {
+	public SnomedIdentifierServiceEventHandler(Provider<ISnomedIdentifierGenerator> identifierService) {
 		this.identifierService = checkNotNull(identifierService, "identifierService");
 	}
 

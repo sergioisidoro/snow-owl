@@ -28,7 +28,7 @@ import com.b2international.snowowl.snomed.datastore.SnomedConceptLookupService;
 import com.b2international.snowowl.snomed.datastore.SnomedEditingContext;
 import com.b2international.snowowl.snomed.datastore.SnomedRelationshipLookupService;
 import com.b2international.snowowl.snomed.datastore.StatementFragment;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifiers;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.model.SnomedModelExtensions;
 import com.b2international.snowowl.snomed.reasoner.server.diff.OntologyChange.Nature;
 import com.b2international.snowowl.snomed.reasoner.server.diff.OntologyChangeProcessor;
@@ -87,7 +87,7 @@ public class RelationshipPersister extends OntologyChangeProcessor<StatementFrag
 
 		final String sourceConceptId = Long.toString(conceptId);
 		final Concept sourceConcept = conceptLookupService.getComponent(sourceConceptId, transaction);
-		final String namespace = SnomedIdentifiers.of(sourceConceptId).getNamespace();
+		final String namespace = SnomedIdentifier.of(sourceConceptId).getNamespace();
 		final Concept module = sourceConcept.getModule();
 		
 		final Concept typeConcept;

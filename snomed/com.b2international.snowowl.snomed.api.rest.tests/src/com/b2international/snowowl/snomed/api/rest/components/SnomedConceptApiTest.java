@@ -45,7 +45,7 @@ import org.junit.Test;
 import com.b2international.snowowl.snomed.api.rest.AbstractSnomedApiTest;
 import com.b2international.snowowl.snomed.api.rest.SnomedApiTestConstants;
 import com.b2international.snowowl.snomed.api.rest.SnomedComponentType;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifiers;
+import com.b2international.snowowl.snomed.datastore.internal.id.SnowOwlSnomedIdentifierGenerator;
 import com.jayway.restassured.response.Response;
 
 /**
@@ -100,7 +100,7 @@ public class SnomedConceptApiTest extends AbstractSnomedApiTest {
 
 	@Test
 	public void createConceptWithGeneratedId() {
-		final String conceptId = SnomedIdentifiers.generateConceptId();
+		final String conceptId = SnowOwlSnomedIdentifierGenerator.generateConceptId();
 		final Map<?, ?> requestBody = givenConceptRequestBody(conceptId, ROOT_CONCEPT, MODULE_SCT_CORE, PREFERRED_ACCEPTABILITY_MAP, false);		
 		final String createdId = assertComponentCreated(createMainPath(), SnomedComponentType.CONCEPT, requestBody);
 		assertEquals("Pre-generated and returned concept ID should match.", conceptId, createdId);
@@ -116,7 +116,7 @@ public class SnomedConceptApiTest extends AbstractSnomedApiTest {
 	@Test
 	public void createConceptWithGeneratedIdOnBranch() {
 		givenBranchWithPath(testBranchPath);
-		final String conceptId = SnomedIdentifiers.generateConceptId();
+		final String conceptId = SnowOwlSnomedIdentifierGenerator.generateConceptId();
 		final Map<?, ?> requestBody = givenConceptRequestBody(conceptId, ROOT_CONCEPT, MODULE_SCT_CORE, PREFERRED_ACCEPTABILITY_MAP, false);
 		final String createdId = assertComponentCreated(testBranchPath, SnomedComponentType.CONCEPT, requestBody);
 		assertEquals("Pre-generated and returned concept ID should match.", conceptId, createdId);

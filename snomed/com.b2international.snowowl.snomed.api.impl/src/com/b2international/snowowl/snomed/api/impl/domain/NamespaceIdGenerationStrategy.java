@@ -20,7 +20,7 @@ import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.api.domain.IdGenerationStrategy;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
-import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierService;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 
 public class NamespaceIdGenerationStrategy implements IdGenerationStrategy {
 
@@ -38,7 +38,7 @@ public class NamespaceIdGenerationStrategy implements IdGenerationStrategy {
 
 	@Override
 	public String getId() {
-		return ApplicationContext.getServiceForClass(ISnomedIdentifierService.class).generateId(category, getNamespaceIdOrDefault());
+		return ApplicationContext.getServiceForClass(ISnomedIdentifierGenerator.class).generateId(category, getNamespaceIdOrDefault());
 	}
 
 	private String getNamespaceIdOrDefault() {

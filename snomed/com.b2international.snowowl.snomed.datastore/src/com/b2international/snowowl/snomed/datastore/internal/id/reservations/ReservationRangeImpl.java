@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
-import com.b2international.snowowl.snomed.datastore.id.SnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -63,7 +63,7 @@ public class ReservationRangeImpl implements Reservation {
 	}
 
 	@Override
-	public boolean includes(SnomedIdentifier identifier) {
+	public boolean includes(ISnomedIdentifier identifier) {
 		checkNotNull(identifier, "identifier");
 		return itemIdRange.contains(identifier.getItemId()) && Objects.equal(identifier.getNamespace(), getNamespace()) && getComponents().contains(identifier.getComponentCategory());
 	}
