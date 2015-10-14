@@ -18,20 +18,28 @@ package com.b2international.snowowl.snomed.datastore.internal.id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.b2international.snowowl.core.ApplicationContext;
 import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
+import com.b2international.snowowl.snomed.datastore.SnomedTerminologyBrowser;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration.IdGenerationSource;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
+import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
+import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
+import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SnomedIdentifierReservationServiceImpl;
+import com.google.inject.Provider;
 
 /**
- * Factory to create a Snomed CT identifier generator
+ * Factory to create a SNOMED CT identifier generator
  */
 public class SnomedIdentifierGeneratorFactory {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedIdentifierGeneratorFactory.class);
 	
 	private static ISnomedIdentifierGenerator instance;
+	
+	private static final String STORE_RESERVATIONS = "internal_store_reservations"; //$NON-NLS-N$
 	
 	public static synchronized ISnomedIdentifierGenerator create() {
 		if (instance !=null ) {
@@ -49,14 +57,26 @@ public class SnomedIdentifierGeneratorFactory {
 			
 			if (idGenerationSource == IdGenerationSource.INTERNAL) {
 				LOGGER.info("Snow Owl is configured to use internal id generation.");
-				instance = new SnowOwlSnomedIdentifierGenerator();
+				final ISnomedIdentiferReservationService reservationService = new SnomedIdentifierReservationServiceImpl();
+				Provider<SnomedTerminologyBrowser> provider = new Provider<SnomedTerminologyBrowser>() {
+					@Override
+					public SnomedTerminologyBrowser get() {
+						return ApplicationContext.getInstance().getService(SnomedTerminologyBrowser.class);
+					}
+				};
+				
+				reservationService.create(STORE_RESERVATIONS, Reservations.uniqueInStore(provider));
+				final ISnomedIdentifierGenerator idGenerator = new SnowOwlSnomedIdentifierGenerator(reservationService);
+				instance = idGenerator;
 				return instance;
+				
 			} else if (idGenerationSource == IdGenerationSource.EXTERNAL_IHTSDO) {
+				
 				String externalIdGeneratorUrl = coreConfiguration.getExternalIdGeneratorUrl();
 				String externalIdGeneratorPort = coreConfiguration.getExternalIdGeneratorPort();
 				String externalIdGeneratorContextRoot = coreConfiguration.getExternalIdGeneratorContextRoot();
+				LOGGER.info("Snow Owl is configured to use ITHSDO's external id generation with URL: {}:{}/{}", externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
 				instance = new IhtsdoSnomedIdentifierGenerator(externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
-				System.out.println("core config: " + coreConfiguration);
 				return instance;
 			} else {
 				String errorMessage = String.format("Unknown id generation source configured: %s. ", idGenerationSource);

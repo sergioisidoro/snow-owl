@@ -72,6 +72,12 @@ public class SnomedCoreConfiguration {
 	@JsonProperty("externalIdGeneratorContextRoot")
 	private String externalIdGeneratorContextRoot;
 	
+	@JsonProperty("externalIdGeneratorUserName")
+	private String externalIdGeneratorUserName;
+	
+	@JsonProperty("externalIdGeneratorPassword")
+	private String externalIdGeneratorPassword;
+	
 	private boolean concreteDomainSupport;
 	private boolean showReasonerUsageWarning = true;
 	
@@ -217,6 +223,30 @@ public class SnomedCoreConfiguration {
 
 	public void setExternalIdGeneratorContextRoot(String externalIdGeneratorContextRoot) {
 		this.externalIdGeneratorContextRoot = externalIdGeneratorContextRoot;
+	}
+
+	/**
+	 * Returns the configured username for the external id service
+	 * @return
+	 */
+	public String getExternalIdGeneratorUserName() {
+		return externalIdGeneratorUserName;
+	}
+
+	public void setExternalIdGeneratorUserName(String externalIdGeneratorUserName) {
+		this.externalIdGeneratorUserName = externalIdGeneratorUserName;
+	}
+
+	/**
+	 * Returns the password for the external id service
+	 * @return
+	 */
+	public String getExternalIdGeneratorPassword() {
+		return externalIdGeneratorPassword;
+	}
+
+	public void setExternalIdGeneratorPassword(String externalIdGeneratorPassword) {
+		this.externalIdGeneratorPassword = externalIdGeneratorPassword;
 	}
 	
 }
