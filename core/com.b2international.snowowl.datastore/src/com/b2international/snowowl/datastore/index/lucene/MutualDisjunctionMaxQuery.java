@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.b2international.snowowl.datastore.index;
+package com.b2international.snowowl.datastore.index.lucene;
 
+import static com.google.common.collect.Lists.newArrayList;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.lucene.queries.ChainedFilter;
@@ -26,9 +28,8 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.FilteredQuery;
 import org.apache.lucene.search.Query;
 
-import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
 
 /**
  * A variant of {@link DisjunctionMaxQuery} that enforces mutual exclusivity by building a filter
@@ -36,17 +37,19 @@ import com.google.common.collect.Iterables;
  * <p>
  * All added disjuncts will be converted to a {@link FilteredQuery} with a chained filter, combining
  * all previous disjunct filters with an AND_NOT operator, and including this disjunct's filter part
- * with an AND operator if the disjunct itself was a FilteredQuery originally.
- * 
+ * with an AND operator if the disjunct is a FilteredQuery itself.
+ *  
  * @since 4.4
  */
-public class MutuallyDisjointQuery extends DisjunctionMaxQuery {
+public class MutualDisjunctionMaxQuery extends DisjunctionMaxQuery {
 
-	public MutuallyDisjointQuery(final float tieBreakerMultiplier) {
+	private final List<Filter> originalFilters = newArrayList();
+	
+	public MutualDisjunctionMaxQuery(final float tieBreakerMultiplier) {
 		super(tieBreakerMultiplier);
 	}
 
-	public MutuallyDisjointQuery(final List<Query> disjuncts, final float tieBreakerMultiplier) {
+	public MutualDisjunctionMaxQuery(final List<Query> disjuncts, final float tieBreakerMultiplier) {
 		super(disjuncts, tieBreakerMultiplier);
 	}
 
@@ -56,15 +59,13 @@ public class MutuallyDisjointQuery extends DisjunctionMaxQuery {
 			add(disjunct);
 		}
 	}
-
+	
 	@Override
 	public void add(final Query query) {
-		final Iterable<Query> allDisjuncts = Iterables.concat(getDisjuncts(), Collections.singleton(query));
-		final Filter[] filters = FluentIterable.from(allDisjuncts)
-				.filter(FilteredQuery.class)
-				.transform(new Function<FilteredQuery, Filter>() { @Override public Filter apply(final FilteredQuery input) {
-					return input.getFilter();
-				}})
+		originalFilters.add(extractFilter(query));
+		
+		final Filter[] filters = FluentIterable.from(originalFilters)
+				.filter(Predicates.notNull())
 				.toArray(Filter.class);
 
 		if (filters.length < 1) {
@@ -77,8 +78,23 @@ public class MutuallyDisjointQuery extends DisjunctionMaxQuery {
 			super.add(new FilteredQuery(extractQuery(query), new ChainedFilter(filters, ops)));
 		}
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation creates a defensive copy so that the original filter list doesn't get out of sync when the
+	 * list of returned queries is modified.
+	 */
+	@Override
+	public ArrayList<Query> getDisjuncts() {
+		return newArrayList(super.getDisjuncts());
+	}
 
 	private static Query extractQuery(final Query query) {
 		return query instanceof FilteredQuery ? ((FilteredQuery) query).getQuery() : query;
+	}
+	
+	private static Filter extractFilter(final Query query) {
+		return query instanceof FilteredQuery ? ((FilteredQuery) query).getFilter() : null;
 	}
 }
