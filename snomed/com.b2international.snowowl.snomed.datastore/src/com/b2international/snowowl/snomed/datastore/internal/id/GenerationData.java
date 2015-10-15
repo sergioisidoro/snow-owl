@@ -15,21 +15,27 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
+import com.b2international.snowowl.core.terminology.ComponentCategory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
- *{
- * "namespace": 0,
- * "partitionId": "string",
- * "systemId": "string",
- * "software": "string",
- * "comment": "string",
- * "generateLegacyIds": "false"
-}
+ * Bean to represent id generation data used by IHTSDO's
+ * ID generation service.
+ * Instances of this class are meant to be serialized and deserialized
+ * to and from Json.
+ *
+ *	{
+ * 		"namespace": 0,
+ * 		"partitionId": "string",
+ * 		"systemId": "string",
+ * 		"software": "string",
+ * 		"comment": "string",
+ * 		"generateLegacyIds": "false"
+ *	}
  */
 public class GenerationData {
 	
 	private int namespace;
-	
-	private String partitionId;
 	
 	private String systemId = "";
 	
@@ -38,6 +44,9 @@ public class GenerationData {
 	private String comment = "Testing";
 	
 	private String generateLegacyIds = "false";
+	
+	@JsonIgnore
+	private ComponentCategory componentCategory;
 	
 	/**
 	 * @return the namespace
@@ -57,14 +66,15 @@ public class GenerationData {
 	 * @return the partitionId
 	 */
 	public String getPartitionId() {
-		return partitionId;
-	}
-
-	/**
-	 * @param partitionId the partitionId to set
-	 */
-	public void setPartitionId(String partitionId) {
-		this.partitionId = partitionId;
+		final StringBuilder buf = new StringBuilder();
+		if (namespace == 0) {
+			buf.append('0');
+		} else {
+			buf.append('1');
+		}
+		// append the second part of the partition-identifier
+		buf.append(getComponentCategory().ordinal());
+		return buf.toString();
 	}
 
 	/**
@@ -121,6 +131,14 @@ public class GenerationData {
 	 */
 	public void setGenerateLegacyIds(String generateLegacyIds) {
 		this.generateLegacyIds = generateLegacyIds;
+	}
+
+	public ComponentCategory getComponentCategory() {
+		return componentCategory;
+	}
+
+	public void setComponentCategory(ComponentCategory componentCategory) {
+		this.componentCategory = componentCategory;
 	}
 
 	

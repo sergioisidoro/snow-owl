@@ -16,19 +16,27 @@
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
 /**
- *
+ * Bean to represent credentials used by IHTSDO's
+ * ID generation service.
+ * Instances of this class are meant to be serialized and deserialized
+ * to and from Json.
  */
-public class Token {
-	private String token;
+public class IhtsdoCredentials {
 
-	public Token() {
-	}
-	
-	public String getToken() {
-		return token;
+	private String username;
+	private String password;
+
+	public IhtsdoCredentials(String username, String password) {
+		this.username = username;
+		this.password = password;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public String getUsername() {
+		return username;
 	}
+
+	public String getPassword() {
+		return password;
+	}
+
 }

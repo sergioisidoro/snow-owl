@@ -33,6 +33,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -40,33 +41,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Sandbox to exercise the IHTSDO SNOMED CT identifier service endpoints.
+ * *Not* to test Snow Owl code.
  */
 @FixMethodOrder(MethodSorters.JVM)
 public class IhtsdoIdentifierServiceTest {
-
-	class IhtsdoCredentials {
-
-		private String username;
-		private String password;
-
-		public IhtsdoCredentials(String username, String password) {
-			this.username = username;
-			this.password = password;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-	}
 	
-	private final static String SERVICE_URL = "http://107.170.101.181:3000/api";
+	private final static String SERVICE_URL = "http://107.170.101.181:3000/api"; //$NON-NLS-N$
 	private final static String USERNAME = "snowowl-dev-b2i"; // $NON-NLS-N$
 	private final static String PASSWORD = "hAAYLYMX5gc98SDEz9cr"; // $NON-NLS-N$
+	private final static int B2I_NAMESPACE = 1000154;
 
 	private static String jsonTokenString;
 	private static String tokenString;
@@ -185,8 +168,8 @@ public class IhtsdoIdentifierServiceTest {
 	 */
 	private String getGenerationDataString() throws JsonProcessingException {
 		GenerationData generationData = new GenerationData();
-		generationData.setNamespace(12345);
-		generationData.setPartitionId("01");
+		generationData.setNamespace(B2I_NAMESPACE);
+		generationData.setComponentCategory(ComponentCategory.RELATIONSHIP);
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(generationData);
 	}
@@ -198,14 +181,16 @@ public class IhtsdoIdentifierServiceTest {
 		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "logout");
 
 		System.out.println("Executing request: " + httpPost.getRequestLine());
+		System.out.println("Token: " + jsonTokenString);
+		httpPost.setEntity(new StringEntity(jsonTokenString,
+				ContentType.create("application/json")));
+		HttpResponse response;
 		try {
-			System.out.println("Token: " + jsonTokenString);
-			httpPost.setEntity(new StringEntity(jsonTokenString,
-					ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPost);
-			
+			response = httpClient.execute(httpPost);
 			System.out.println(response.getStatusLine());
 			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
