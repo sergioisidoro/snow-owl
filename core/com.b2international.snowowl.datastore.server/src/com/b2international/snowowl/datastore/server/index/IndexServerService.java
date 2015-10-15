@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -72,6 +73,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -79,7 +82,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
  * Terminology independent server side Lucene specific index service responsible for managing indexed documents.
- * 
  * 
  * @see AbstractIndexUpdater
  */
@@ -318,7 +320,7 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 			final List<DocumentWithScore> result = Lists.newArrayListWithExpectedSize(topDocs.totalHits);
 
 			for (final ScoreDoc scoreDoc : topDocs.scoreDocs) {
-				result.add(new DocumentWithScore(searcher.doc(scoreDoc.doc), branchPath, scoreDoc.score));
+				result.add(new DocumentWithScore(searcher.doc(scoreDoc.doc), scoreDoc.score));
 			}
 
 			return result;
@@ -333,6 +335,42 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 				}
 			}
 		}
+	}
+	
+	@Override
+	public ImmutableMultimap<String, DocumentWithScore> multiSearch(final IBranchPath branchPath, final ImmutableMap<String, Query> namedQueries, final @Nullable Sort sort, final int limit) {
+		// XXX: ImmutableMap required to keep user-specified iteration order, which will be taken into account 
+		
+		checkNotNull(branchPath, "branchPath");
+		checkNotNull(namedQueries, "namedQueries");
+		checkArgument(limit > 0, "limit must be positive");
+		checkNotDisposed();
+	
+		return executeReadTransaction(branchPath, new IndexRead<ImmutableMultimap<String, DocumentWithScore>>() {
+			@Override
+			public ImmutableMultimap<String, DocumentWithScore> execute(final IndexSearcher index) throws IOException {
+				final ImmutableMultimap.Builder<String, DocumentWithScore> result = ImmutableMultimap.builder();
+				int remaining = limit;
+				
+				for (final Entry<String, Query> namedQuery : namedQueries.entrySet()) {
+					if (remaining <= 0) {
+						break;
+					}
+
+					final String key = namedQuery.getKey();
+					final Query query = namedQuery.getValue();
+					final TopDocs topDocs = index.search(query, null, remaining, sort, true, false);
+
+					for (final ScoreDoc scoreDoc : topDocs.scoreDocs) {
+						result.put(key, new DocumentWithScore(index.doc(scoreDoc.doc), scoreDoc.score));
+					}
+					
+					remaining -= topDocs.scoreDocs.length;
+				}
+				
+				return result.build();
+			}
+		});
 	}
 
 	@Override
@@ -361,7 +399,7 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 			final List<DocumentWithScore> result = Lists.newArrayListWithExpectedSize(limit);
 
 			for (int i = offset; i < offset + limit && i < scoreDocs.length; i++) {
-				result.add(new DocumentWithScore(searcher.doc(scoreDocs[i].doc), branchPath, scoreDocs[i].score));
+				result.add(new DocumentWithScore(searcher.doc(scoreDocs[i].doc), scoreDocs[i].score));
 			}
 
 			return result;
@@ -464,7 +502,7 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 
 			int size = 0;
 			while (itr.next()) {
-				documents[size++] = new DocumentWithScore(searcher.doc(itr.getDocID()), branchPath);
+				documents[size++] = new DocumentWithScore(searcher.doc(itr.getDocID()));
 			}
 			
 			return Arrays.asList(Arrays.copyOf(documents, size));
@@ -787,19 +825,6 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 	}
 	
 	@Override
-	public void addDocument(final IBranchPath branchPath, final Document document) {
-		checkNotNull(branchPath, "branchPath");
-		checkNotNull(document, "document");
-		checkNotDisposed();
-
-		try {
-			getBranchService(branchPath).addDocument(document);
-		} catch (final IOException e) {
-			throw new IndexException(e);
-		}		
-	}
-	
-	@Override
 	public IndexBranchService getBranchService(final IBranchPath branchPath) {
 		
 		// Record usage
@@ -873,23 +898,14 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 		getIndexPostProcessor().postProcess(configuration);
 	}
 
-	/**
-	 * (non-API)
-	 * 
-	 * @param branchPath
-	 * @return
-	 */
-	public boolean hasDocuments(final IBranchPath branchPath) {
-		return hasDocumentsInternal(branchPath);
-	}
-
 	private void checkNotDisposed() {
 		if (disposed) {
 			throw new IndexException("IndexServerService is already disposed.");
 		}
 	}
 
-	private boolean hasDocumentsInternal(final IBranchPath branchPath) {
+	@Override
+	public boolean hasDocuments(final IBranchPath branchPath) {
 		checkNotNull(branchPath, "branchPath");
 		checkNotDisposed();
 		
@@ -900,6 +916,7 @@ public abstract class IndexServerService<E extends IIndexEntry> extends Abstract
 		}
 	}
 
+	@Override
 	public <T> T executeReadTransaction(IBranchPath branchPath, IndexRead<T> read) {
 		final ReferenceManager<IndexSearcher> manager = getManager(branchPath);
 		IndexSearcher searcher = null;	
