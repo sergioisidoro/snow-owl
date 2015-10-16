@@ -96,7 +96,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			jsonTokenString = login();
 			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
 			String generatedId = generateNonExtensionId(tokenString, componentCategory);
-			logout(jsonTokenString);
 			return generatedId;
 		} catch (IOException e) {
 			throw new RuntimeException("Exception when calling the external id generator service.", e);
@@ -128,7 +127,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			jsonTokenString = login();
 			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
 			String generatedId = genererateExtensionId(tokenString, namespace, componentCategory);
-			logout(jsonTokenString);
 			return generatedId;
 		} catch (IOException e) {
 			throw new RuntimeException("Exception when calling the external id generator service.", e);
@@ -155,7 +153,7 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "login");
-		LOGGER.debug("Logging in.  Executing request: {}", httpPost.getRequestLine());
+		LOGGER.info("Logging in.  Executing request: {}", httpPost.getRequestLine());
 
 		try {
 			String credentialsString = getCredentialsString(userName, password);

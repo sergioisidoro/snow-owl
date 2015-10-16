@@ -16,13 +16,16 @@
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 
 /**
  * Test to exercise the support for the external id generation service.
  */
+@FixMethodOrder(MethodSorters.JVM)
 public class IhtsdoSnomedIdentifierGeneratorTest {
 	
 	private final static String SERVICE_URL = "http://107.170.101.181:3000"; //$NON-NLS-N$
@@ -31,14 +34,23 @@ public class IhtsdoSnomedIdentifierGeneratorTest {
 	private final static String B2I_NAMESPACE = "1000154"; //$NON-NLS-N$
 	
 	@Test
-	public void testExternalGenerator() {
+	public void testExtensionConcept() {
 		IhtsdoSnomedIdentifierGenerator generator = 
 				new IhtsdoSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
 		
 		String id = generator.generateId(ComponentCategory.CONCEPT, B2I_NAMESPACE);
 		System.out.println("Id: " + id);
 		Assert.assertNotNull(id);
+	}
+	
+	@Test
+	public void testCoreConcept() {
+		IhtsdoSnomedIdentifierGenerator generator = 
+				new IhtsdoSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
 		
+		String id = generator.generateId(ComponentCategory.CONCEPT);
+		System.out.println("Id: " + id);
+		Assert.assertNotNull(id);
 	}
 
 }
