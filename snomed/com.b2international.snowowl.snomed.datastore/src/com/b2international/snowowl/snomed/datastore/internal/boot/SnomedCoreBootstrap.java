@@ -37,9 +37,8 @@ public class SnomedCoreBootstrap extends DefaultBootstrapFragment {
 
 	@Override
 	public void init(SnowOwlConfiguration configuration, Environment env) throws Exception {
-		ISnomedIdentifierGenerator idGenerator = SnomedIdentifierGeneratorFactory.create();
+		SnomedIdentifierGeneratorFactory.registerService(configuration, env);
 		
-		env.services().registerService(ISnomedIdentifierGenerator.class, idGenerator);
 		env.services().registerService(SnomedCoreConfiguration.class, configuration.getModuleConfig(SnomedCoreConfiguration.class));
 		env.services().registerService(SnomedMetadata.class, new SnomedMetadataImpl(env.provider(SnomedTerminologyBrowser.class)));
 	}

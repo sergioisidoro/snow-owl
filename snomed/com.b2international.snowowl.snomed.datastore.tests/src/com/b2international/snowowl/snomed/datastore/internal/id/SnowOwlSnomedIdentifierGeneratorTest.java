@@ -52,7 +52,7 @@ public class SnowOwlSnomedIdentifierGeneratorTest {
 
 	@Before
 	public void givenIdentifierService() {
-		this.identifierGenerator = new SnowOwlSnomedIdentifierGenerator(reservations, itemIdGenerationStrategy);
+		this.identifierGenerator = new DefaultSnomedIdentifierGenerator(reservations, itemIdGenerationStrategy);
 	}
 
 	@Test

@@ -15,9 +15,6 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
-import com.b2international.snowowl.core.terminology.ComponentCategory;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * Bean to represent id generation data used by IHTSDO's
  * ID generation service.
@@ -33,91 +30,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * 		"generateLegacyIds": "false"
  *	}
  */
-public class GenerationData {
-	
-	private int namespace;
-	
-	private String systemId = "";
-	
-	private String software = "Snow Owl";
-	
-	private String comment = "Testing";
+public class GenerationData extends RegistrationData {
 	
 	private String generateLegacyIds = "false";
-	
-	@JsonIgnore
-	private ComponentCategory componentCategory;
-	
-	/**
-	 * @return the namespace
-	 */
-	public int getNamespace() {
-		return namespace;
-	}
-
-	/**
-	 * @param namespace the namespace to set
-	 */
-	public void setNamespace(int namespace) {
-		this.namespace = namespace;
-	}
-
-	/**
-	 * @return the partitionId
-	 */
-	public String getPartitionId() {
-		final StringBuilder buf = new StringBuilder();
-		if (namespace == 0) {
-			buf.append('0');
-		} else {
-			buf.append('1');
-		}
-		// append the second part of the partition-identifier
-		buf.append(getComponentCategory().ordinal());
-		return buf.toString();
-	}
-
-	/**
-	 * @return the systemId
-	 */
-	public String getSystemId() {
-		return systemId;
-	}
-
-	/**
-	 * @param systemId the systemId to set
-	 */
-	public void setSystemId(String systemId) {
-		this.systemId = systemId;
-	}
-
-	/**
-	 * @return the software
-	 */
-	public String getSoftware() {
-		return software;
-	}
-
-	/**
-	 * @param software the software to set
-	 */
-	public void setSoftware(String software) {
-		this.software = software;
-	}
-
-	/**
-	 * @return the comment
-	 */
-	public String getComment() {
-		return comment;
-	}
-
-	/**
-	 * @param comment the comment to set
-	 */
-	public void setComment(String comment) {
-		this.comment = comment;
-	}
 
 	/**
 	 * @return the generateLegacyIds
@@ -132,14 +47,5 @@ public class GenerationData {
 	public void setGenerateLegacyIds(String generateLegacyIds) {
 		this.generateLegacyIds = generateLegacyIds;
 	}
-
-	public ComponentCategory getComponentCategory() {
-		return componentCategory;
-	}
-
-	public void setComponentCategory(ComponentCategory componentCategory) {
-		this.componentCategory = componentCategory;
-	}
-
 	
 }

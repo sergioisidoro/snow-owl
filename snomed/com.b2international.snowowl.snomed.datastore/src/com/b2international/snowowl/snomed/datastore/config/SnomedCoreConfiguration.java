@@ -32,7 +32,7 @@ public class SnomedCoreConfiguration {
 	
 	public enum IdGenerationSource {
 		INTERNAL, //Snow Owl's internal random id generator
-		EXTERNAL_IHTSDO //IHTSDO's external id generator
+		CIS //Component Identifer Service (CIS), IHTSDO's external id generator
 	}
 
 	public static final String ELK_REASONER_ID = "org.semanticweb.elk.elk.reasoner.factory"; //$NON-NLS-1$

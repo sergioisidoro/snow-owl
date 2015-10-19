@@ -15,18 +15,28 @@
  */
 package com.b2international.snowowl.snomed.datastore;
 
+import java.io.IOException;
+
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.osgi.framework.console.CommandInterpreter;
 import org.eclipse.osgi.framework.console.CommandProvider;
 
-import com.b2international.commons.StringUtils;
 import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration.IdGenerationSource;
+import com.b2international.snowowl.snomed.datastore.internal.id.IdGeneratorException;
+import com.b2international.snowowl.snomed.datastore.internal.id.IhtsdoCredentials;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * OSGI command contribution with command to test IHTSDO's external Id
@@ -83,28 +93,89 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 		String externalIdGeneratorPort = coreConfiguration.getExternalIdGeneratorPort();
 		String externalIdGeneratorContextRoot = coreConfiguration.getExternalIdGeneratorContextRoot();
 		
-		ci.println("Checking IHTSDO's external id generation service...");
+		String serviceUrl = externalIdGeneratorUrl;
 
-		DefaultHttpClient httpClient = new DefaultHttpClient();
-		HttpGet httpGet = null;
+		if (externalIdGeneratorPort != null) {
+			serviceUrl = serviceUrl + ":" + externalIdGeneratorPort;
+		}
+		
+		if (externalIdGeneratorContextRoot != null) {
+			serviceUrl = serviceUrl + "/" + externalIdGeneratorContextRoot;
+		}
+		ci.println("Checking IHTSDO's external id generation service, by logging in and logging out.");
+
+		String jsonTokenString = login(serviceUrl, ci);
+		logout(serviceUrl, jsonTokenString, ci);
+	}
+	
+	/**
+	 * Logs in to the IHTSDO SNOMED CT id generation service 
+	 * @return token representing the session
+	 * @throws IOException
+	 */
+	protected String login(String serviceUrl, CommandInterpreter ci) {
+
+		SnowOwlConfiguration snowOwlConfiguration = SnowOwlApplication.INSTANCE.getConfiguration();
+		SnomedCoreConfiguration coreConfiguration = snowOwlConfiguration.getModuleConfig(SnomedCoreConfiguration.class);
+
+		String userName = coreConfiguration.getExternalIdGeneratorUserName();
+		String password = coreConfiguration.getExternalIdGeneratorPassword();
+
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "login");
+		ci.println("Logging in.  Executing request: " +  httpPost.getRequestLine());
+
 		try {
-			if (StringUtils.isEmpty(externalIdGeneratorPort)) {
-				httpGet = new HttpGet(externalIdGeneratorUrl + "/" + externalIdGeneratorContextRoot + "/testService");
-			} else {
-				httpGet = new HttpGet(externalIdGeneratorUrl + ":" + externalIdGeneratorPort 
-						+ "/" + externalIdGeneratorContextRoot + "/testService");
-			}
-			ci.println("Request: " + httpGet.getRequestLine());
-			HttpResponse response = httpClient.execute(httpGet);
-			ci.println("---------------------------------------------------------");
-			ci.println(response.getStatusLine());
-			ci.println("Response: " + EntityUtils.toString(response.getEntity()));
-		} catch (final Throwable t) {
-			ci.println("Error: " + t.getMessage());
+			String credentialsString = getCredentialsString(userName, password);
+			httpPost.setEntity(new StringEntity(credentialsString, ContentType.create("application/json")));
+			HttpResponse response = httpClient.execute(httpPost);
+
+			ci.println("Response: " + response.getStatusLine());
+
+			String jsonTokenString = EntityUtils.toString(response.getEntity());
+			return jsonTokenString;
+		} catch (IOException e) {
+			throw new IdGeneratorException(e);
 		} finally {
-			httpGet.releaseConnection();
+			ci.println("Releasing the connection.");
+			httpPost.releaseConnection();
+			httpClient.getConnectionManager().shutdown();
+		}
+
+	}
+	
+	/**
+	 * Logs out of the id generation session marked by the token. 
+	 * @param jsonTokenString
+	 * @param ci 
+	 */
+	protected void logout(String serviceUrl, String jsonTokenString, CommandInterpreter ci) {
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "logout");
+
+		ci.println("Logging out. Request: " + httpPost.getRequestLine() + ", token: " + jsonTokenString);
+		httpPost.setEntity(new StringEntity(jsonTokenString, ContentType.create("application/json")));
+		HttpResponse response;
+		try {
+			response = httpClient.execute(httpPost);
+			ci.println("Response: " + response.getStatusLine());
+		} catch (ClientProtocolException e) {
+			throw new IdGeneratorException(e);
+		} catch (IOException e) {
+			throw new IdGeneratorException(e);
+		} finally {
+			ci.println("Releasing the connection.");
+			httpPost.releaseConnection();
 			httpClient.getConnectionManager().shutdown();
 		}
 	}
+	
+	private String getCredentialsString(String userName, String password)
+			throws JsonGenerationException, JsonMappingException, IOException {
+		IhtsdoCredentials credentials = new IhtsdoCredentials(userName, password);
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(credentials);
+	}
+
 
 }

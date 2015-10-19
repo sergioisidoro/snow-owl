@@ -29,7 +29,7 @@ import com.b2international.snowowl.snomed.datastore.internal.id.reservations.Sno
 import com.google.common.base.Strings;
 
 /**
- * Snow Owl's internal identifier generator.
+ * Snow Owl's internal identifier generator, default.
  * SNOMED CT Identifiers v0.4:
  * <p />
  * <i>An item identifier can have a lowest permissible value of 100 (three digits) and a highest permissible value of 99999999 (8 digits) for short
@@ -37,34 +37,34 @@ import com.google.common.base.Strings;
  * 
  * @since 4.0
  */
-public class SnowOwlSnomedIdentifierGenerator implements ISnomedIdentifierGenerator {
+public class DefaultSnomedIdentifierGenerator implements ISnomedIdentifierGenerator {
 
 	private ItemIdGenerationStrategy itemIdGenerationStrategy;
 	private ISnomedIdentiferReservationService reservationService;
 
 	/**
-	 * Creates a new Snomed CT id generator with no reservation service 
+	 * Creates a new SNOMED CT id generator with no reservation service 
 	 * or generation strategy.  
 	 */
-	public SnowOwlSnomedIdentifierGenerator() {
+	public DefaultSnomedIdentifierGenerator() {
 		this(new SnomedIdentifierReservationServiceImpl(), ItemIdGenerationStrategy.RANDOM);
 	}
 	
 	/**
-	 * Creates a Snomed CT id generator for a reservation service and random id generation 
+	 * Creates a SNOMED CT id generator for a reservation service and random id generation 
 	 * strategy.
 	 * @param reservationService
 	 */
-	public SnowOwlSnomedIdentifierGenerator(final ISnomedIdentiferReservationService reservationService) {
+	public DefaultSnomedIdentifierGenerator(final ISnomedIdentiferReservationService reservationService) {
 		this(reservationService, ItemIdGenerationStrategy.RANDOM);
 	}
 	
 	/**
-	 * Creates a Snomed CT id generator for a reservation service and strategy specified.
+	 * Creates a SNOMED CT id generator for a reservation service and strategy specified.
 	 * @param reservationService
 	 * @param itemIdGenerationStrategy id generation strategy
 	 */
-	public SnowOwlSnomedIdentifierGenerator(final ISnomedIdentiferReservationService reservationService, ItemIdGenerationStrategy itemIdGenerationStrategy) {
+	public DefaultSnomedIdentifierGenerator(final ISnomedIdentiferReservationService reservationService, ItemIdGenerationStrategy itemIdGenerationStrategy) {
 		this.setReservationService(checkNotNull(reservationService, "reservationService"));
 		this.setItemIdGenerationStrategy(checkNotNull(itemIdGenerationStrategy, "itemIdGenerationStrategy"));
 	}
@@ -94,7 +94,7 @@ public class SnowOwlSnomedIdentifierGenerator implements ISnomedIdentifierGenera
 	 * @return
 	 */
 	public static ISnomedIdentifier generateFrom(int itemId, String namespace, ComponentCategory component) {
-		return SnomedIdentifier.of(new SnowOwlSnomedIdentifierGenerator(new SnomedIdentifierReservationServiceImpl(), new SingleItemIdGenerationStrategy(String.valueOf(itemId))).generateId(component, namespace));
+		return SnomedIdentifier.of(new DefaultSnomedIdentifierGenerator(new SnomedIdentifierReservationServiceImpl(), new SingleItemIdGenerationStrategy(String.valueOf(itemId))).generateId(component, namespace));
 	}
 	
 	public static String generateConceptId() {
@@ -126,7 +126,7 @@ public class SnowOwlSnomedIdentifierGenerator implements ISnomedIdentifierGenera
 	}
 
 	private static ISnomedIdentifierGenerator getSnomedIdentifierGenerator() {
-		return new SnowOwlSnomedIdentifierGenerator(new SnomedIdentifierReservationServiceImpl());
+		return new DefaultSnomedIdentifierGenerator(new SnomedIdentifierReservationServiceImpl());
 	}
 
 	@Override

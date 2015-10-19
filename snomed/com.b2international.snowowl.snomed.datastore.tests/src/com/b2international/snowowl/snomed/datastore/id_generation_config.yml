@@ -21,7 +21,7 @@ fileAuth:
       password: snowowl
 
 snomed:
-  idGenerationSource : EXTERNAL_IHTSDO
+  idGenerationSource : CIS
   externalIdGeneratorUrl : http://107.170.101.181
   externalIdGeneratorPort : 3000
   externalIdGeneratorContextRoot : api

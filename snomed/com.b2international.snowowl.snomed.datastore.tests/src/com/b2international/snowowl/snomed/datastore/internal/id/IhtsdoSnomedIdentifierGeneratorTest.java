@@ -35,8 +35,8 @@ public class IhtsdoSnomedIdentifierGeneratorTest {
 	
 	@Test
 	public void testExtensionConcept() {
-		IhtsdoSnomedIdentifierGenerator generator = 
-				new IhtsdoSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
+		CisSnomedIdentifierGenerator generator = 
+				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
 		
 		String id = generator.generateId(ComponentCategory.CONCEPT, B2I_NAMESPACE);
 		System.out.println("Id: " + id);
@@ -45,8 +45,8 @@ public class IhtsdoSnomedIdentifierGeneratorTest {
 	
 	@Test
 	public void testCoreConcept() {
-		IhtsdoSnomedIdentifierGenerator generator = 
-				new IhtsdoSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
+		CisSnomedIdentifierGenerator generator = 
+				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
 		
 		String id = generator.generateId(ComponentCategory.CONCEPT);
 		System.out.println("Id: " + id);

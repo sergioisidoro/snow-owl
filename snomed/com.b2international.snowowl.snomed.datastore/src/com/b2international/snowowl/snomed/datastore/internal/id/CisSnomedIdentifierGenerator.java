@@ -16,10 +16,12 @@
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -28,11 +30,15 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.b2international.snowowl.core.IDisposableService;
 import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
+import com.b2international.snowowl.core.exceptions.NotImplementedException;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
+import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
+import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -46,25 +52,32 @@ import com.google.common.base.Preconditions;
  * {@link https://confluence.ihtsdotools.org/display/TOOLS/IHTSDO+Component+Identifier+Service}
  * 
  */
-public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerator {
+public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator, ISnomedIdentiferReservationService, IDisposableService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IhtsdoSnomedIdentifierGenerator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(CisSnomedIdentifierGenerator.class);
 
 	private String externalIdGeneratorUrl;
 	private String externalIdGeneratorPort;
 	private String externalIdGeneratorContextRoot;
+	
+	private ObjectMapper mapper = new ObjectMapper();
+	private HttpClient httpClient = new DefaultHttpClient();
 
 	// the full URL
 	private String serviceUrl;
 
+	private boolean isDisposed;
+
 	/**
+	 * @param reservationService 
 	 * @param externalIdGeneratorUrl
 	 * @param externalIdGeneratorPort
 	 * @param externalIdGeneratorContextRoot
 	 */
-	public IhtsdoSnomedIdentifierGenerator(String externalIdGeneratorUrl, String externalIdGeneratorPort,
+	public CisSnomedIdentifierGenerator(String externalIdGeneratorUrl, String externalIdGeneratorPort,
 			String externalIdGeneratorContextRoot) {
 		Preconditions.checkNotNull(externalIdGeneratorUrl, "External id generator URL is null.");
+
 		this.externalIdGeneratorUrl = externalIdGeneratorUrl;
 		this.externalIdGeneratorPort = externalIdGeneratorPort;
 		this.externalIdGeneratorContextRoot = externalIdGeneratorContextRoot;
@@ -90,7 +103,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 	public String generateId(ComponentCategory componentCategory) {
 		Preconditions.checkNotNull(componentCategory, "Component category is null");
 
-		ObjectMapper mapper = new ObjectMapper();
 		String jsonTokenString = null;
 		try {
 			jsonTokenString = login();
@@ -98,7 +110,7 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			String generatedId = generateNonExtensionId(tokenString, componentCategory);
 			return generatedId;
 		} catch (IOException e) {
-			throw new RuntimeException("Exception when calling the external id generator service.", e);
+			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			//try to log out if we logged in
 			if (jsonTokenString !=null) {
@@ -121,7 +133,7 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 		Preconditions.checkNotNull(namespaceString, "Namespace is null");
 		int namespace = Integer.valueOf(namespaceString);
 
-		ObjectMapper mapper = new ObjectMapper();
+		
 		String jsonTokenString = null;
 		try {
 			jsonTokenString = login();
@@ -129,7 +141,7 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			String generatedId = genererateExtensionId(tokenString, namespace, componentCategory);
 			return generatedId;
 		} catch (IOException e) {
-			throw new RuntimeException("Exception when calling the external id generator service.", e);
+			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			//try to log out if we logged in
 			if (jsonTokenString !=null) {
@@ -151,7 +163,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 		String userName = coreConfiguration.getExternalIdGeneratorUserName();
 		String password = coreConfiguration.getExternalIdGeneratorPassword();
 
-		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "login");
 		LOGGER.info("Logging in.  Executing request: {}", httpPost.getRequestLine());
 
@@ -165,8 +176,7 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			String jsonTokenString = EntityUtils.toString(response.getEntity());
 			return jsonTokenString;
 		} catch (IOException e) {
-			e.printStackTrace();
-			throw e;
+			throw new IdGeneratorException(e);
 		} finally {
 			LOGGER.debug("Releasing the connection.");
 			httpPost.releaseConnection();
@@ -202,12 +212,10 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 		return generateId(generationDataString, tokenString);
 	}
 
-	/**
-	 * @param generationDataString
-	 * @param tokenString
+	/*
+	 * Returns a new generated concept id
 	 */
 	private String generateId(String generationDataString, String tokenString) {
-		HttpClient httpClient = new DefaultHttpClient();
 
 		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "sct/generate?token=" + tokenString);
 		LOGGER.info("Retrieving a generated id. Request: {}", httpPost.getRequestLine());
@@ -223,13 +231,12 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			LOGGER.debug("Generated concept id: {} ", conceptId);
 			return conceptId;
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new IdGeneratorException(e);
 		} finally {
 			LOGGER.debug("Releasing the connection.");
 			httpPost.releaseConnection();
 			httpClient.getConnectionManager().shutdown();
 		}
-		return tokenString;
 		
 	}
 
@@ -238,7 +245,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 	 * @param jsonTokenString
 	 */
 	protected void logout(String jsonTokenString) {
-		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(serviceUrl + "/" + "logout");
 
 		LOGGER.info("Logging out. Request: {}. Token: {}", httpPost.getRequestLine(), jsonTokenString);
@@ -248,9 +254,9 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			response = httpClient.execute(httpPost);
 			LOGGER.debug("Response: {}", response.getStatusLine());
 		} catch (ClientProtocolException e) {
-			e.printStackTrace();
+			throw new IdGeneratorException(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new IdGeneratorException(e);
 		} finally {
 			LOGGER.debug("Releasing the connection.");
 			httpPost.releaseConnection();
@@ -262,7 +268,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 	private String getCredentialsString(String userName, String password)
 			throws JsonGenerationException, JsonMappingException, IOException {
 		IhtsdoCredentials credentials = new IhtsdoCredentials(userName, password);
-		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(credentials);
 	}
 
@@ -276,7 +281,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 		GenerationData generationData = new GenerationData();
 		generationData.setNamespace(namespace);
 		generationData.setComponentCategory(componentCategory);
-		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(generationData);
 	}
 	
@@ -289,10 +293,114 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 			throws JsonProcessingException {
 		GenerationData generationData = new GenerationData();
 		generationData.setComponentCategory(componentCategory);
-		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(generationData);
 	}
 
+	/*
+	 * JSON body data for extension id generation
+	 * @return JSON string
+	 * @throws JsonProcessingException
+	 */
+	private String getReservationDataString(int namespace, ComponentCategory componentCategory)
+			throws JsonProcessingException {
+		RegistrationData registrationData = new RegistrationData();
+		registrationData.setNamespace(namespace);
+		registrationData.setComponentCategory(componentCategory);
+		return mapper.writeValueAsString(registrationData);
+	}
+	
+	/*
+	 * JSON body data for core id generation
+	 * @return JSON string
+	 * @throws JsonProcessingException
+	 */
+	private String getReservationDataString(ComponentCategory componentCategory)
+			throws JsonProcessingException {
+		RegistrationData registrationData = new RegistrationData();
+		registrationData.setComponentCategory(componentCategory);
+		return mapper.writeValueAsString(registrationData);
+	}
+
+	
+	
+
+	@Override
+	public void create(String reservationName, Reservation reservation) {
+		
+		/*
+		 * ISnomedIdentifier snomedId = SnomedIdentifier.of(componentId);
+		String namespace = snomedId.getNamespace();
+		if (namespace != null) {
+			
+		} else {
+			
+		}
+		 */
+		
+		throw new NotImplementedException();
+		
+	}
+
+	@Override
+	public Collection<Reservation> getReservations() {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public Reservation getReservation(String reservationName) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void delete(String reservationName) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public boolean isReserved(String componentId) {
+		
+		HttpGet httpGet = new HttpGet(serviceUrl + "/" + "sct/ids/" + componentId);
+
+		LOGGER.info("Is reserved? Request: {}.", httpGet.getRequestLine());
+		HttpResponse response;
+		try {
+			response = httpClient.execute(httpGet);
+			LOGGER.debug("Response: {}", response.getStatusLine());
+			
+			String responseString = EntityUtils.toString(response.getEntity());
+			ObjectMapper mapper = new ObjectMapper();
+			SctId sctId = mapper.readValue(responseString, SctId.class);
+			
+		} catch (ClientProtocolException e) {
+			throw new IdGeneratorException(e);
+		} catch (IOException e) {
+			throw new IdGeneratorException(e);
+		} finally {
+			LOGGER.debug("Releasing the connection.");
+			httpGet.releaseConnection();
+			httpClient.getConnectionManager().shutdown();
+		}
+		
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	
+
+	@Override
+	public void dispose() {
+		if (httpClient != null) {
+			httpClient.getConnectionManager().shutdown();
+			httpClient = null;
+			isDisposed = true;
+		}
+	}
+
+	@Override
+	public boolean isDisposed() {
+		return isDisposed;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -304,5 +412,6 @@ public class IhtsdoSnomedIdentifierGenerator implements ISnomedIdentifierGenerat
 				+ ", externalIdGeneratorPort=" + externalIdGeneratorPort + ", externalIdGeneratorContextRoot="
 				+ externalIdGeneratorContextRoot + "]";
 	}
-
+	
+	
 }
