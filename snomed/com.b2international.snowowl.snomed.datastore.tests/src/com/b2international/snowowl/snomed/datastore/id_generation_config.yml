@@ -1,0 +1,33 @@
+#
+# Copyright 2011-2015 B2i Healthcare Pte Ltd, http://b2i.sg
+#
+
+# Redirects configuration directory to a random directory under OSGI installation directory
+configurationDirectory: testing/id/configuration
+
+# Redirectes resources directory to have a clean H2 content
+resourceDirectory: testing/id/resources
+
+# necessary to connect one user to the system otherwise Snow Owl startup fails
+systemUser: true
+
+authentication:
+  type: PROP_FILE
+
+fileAuth:
+  users:
+    -
+      username: snowowl
+      password: snowowl
+
+snomed:
+  idGenerationSource : EXTERNAL_IHTSDO
+  externalIdGeneratorUrl : http://107.170.101.181
+  externalIdGeneratorPort : 3000
+  externalIdGeneratorContextRoot : api
+  externalIdGeneratorUserName : snowowl-dev-b2i
+  externalIdGeneratorPassword : hAAYLYMX5gc98SDEz9cr
+  
+
+repository:
+  port: 2036

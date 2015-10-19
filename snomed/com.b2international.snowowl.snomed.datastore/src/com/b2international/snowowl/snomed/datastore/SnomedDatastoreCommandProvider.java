@@ -40,7 +40,7 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("---SNOMED service commands---\n");
 		buffer.append(
-				"\tsnomed ihtsdo_id_service_test - Checks the status of IHTSDO's external id generation service\n");
+				"\tsnomed external_id_service_test - Checks the status of CIS, IHTSDO's external id generation service\n");
 		return buffer.toString();
 	}
 
@@ -55,7 +55,7 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 		try {
 			String cmd = interpreter.nextArgument();
 
-			if ("ihtsdo_id_service_test".equals(cmd)) {
+			if ("external_id_service_test".equals(cmd)) {
 				checkIdGenerationService(interpreter);
 				return;
 			}
