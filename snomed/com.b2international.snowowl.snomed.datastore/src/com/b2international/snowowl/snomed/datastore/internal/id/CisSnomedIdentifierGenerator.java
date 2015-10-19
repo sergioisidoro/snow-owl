@@ -30,15 +30,18 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.b2international.commons.StringUtils;
 import com.b2international.snowowl.core.IDisposableService;
 import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
 import com.b2international.snowowl.core.exceptions.NotImplementedException;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservation;
+import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SingleIdReservation;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -296,12 +299,32 @@ public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator,
 		return mapper.writeValueAsString(generationData);
 	}
 
+	@Override
+	public void create(String reservationName, Reservation reservation) {
+		
+		if (reservation instanceof SingleIdReservation) {
+			SingleIdReservation singleIdReservation = (SingleIdReservation) reservation;
+			ISnomedIdentifier snomedIdentifier = singleIdReservation.getSnomedIdentifier();
+			String sctId = snomedIdentifier.toString();
+			if (StringUtils.isEmpty(snomedIdentifier.getNamespace())) {
+				//core register
+			} else {
+				//extension register
+			}
+		} else {
+			throw new IllegalArgumentException("Could not reserve id for reservation type: " + reservation.getClass());
+		}
+		
+		throw new NotImplementedException();
+		
+	}
+	
 	/*
-	 * JSON body data for extension id generation
+	 * JSON body data for extension id registration
 	 * @return JSON string
 	 * @throws JsonProcessingException
 	 */
-	private String getReservationDataString(int namespace, ComponentCategory componentCategory)
+	private String getRegistrationDataString(int namespace, ComponentCategory componentCategory)
 			throws JsonProcessingException {
 		RegistrationData registrationData = new RegistrationData();
 		registrationData.setNamespace(namespace);
@@ -310,35 +333,15 @@ public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator,
 	}
 	
 	/*
-	 * JSON body data for core id generation
+	 * JSON body data for core id registration
 	 * @return JSON string
 	 * @throws JsonProcessingException
 	 */
-	private String getReservationDataString(ComponentCategory componentCategory)
+	private String getRegistrationtionDataString(ComponentCategory componentCategory)
 			throws JsonProcessingException {
 		RegistrationData registrationData = new RegistrationData();
 		registrationData.setComponentCategory(componentCategory);
 		return mapper.writeValueAsString(registrationData);
-	}
-
-	
-	
-
-	@Override
-	public void create(String reservationName, Reservation reservation) {
-		
-		/*
-		 * ISnomedIdentifier snomedId = SnomedIdentifier.of(componentId);
-		String namespace = snomedId.getNamespace();
-		if (namespace != null) {
-			
-		} else {
-			
-		}
-		 */
-		
-		throw new NotImplementedException();
-		
 	}
 
 	@Override
@@ -370,7 +373,7 @@ public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator,
 			String responseString = EntityUtils.toString(response.getEntity());
 			ObjectMapper mapper = new ObjectMapper();
 			SctId sctId = mapper.readValue(responseString, SctId.class);
-			
+			return !sctId.getStatus().equals("Available");
 		} catch (ClientProtocolException e) {
 			throw new IdGeneratorException(e);
 		} catch (IOException e) {
@@ -380,12 +383,7 @@ public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator,
 			httpGet.releaseConnection();
 			httpClient.getConnectionManager().shutdown();
 		}
-		
-		// TODO Auto-generated method stub
-		return false;
 	}
-
-	
 
 	@Override
 	public void dispose() {
@@ -412,6 +410,5 @@ public class CisSnomedIdentifierGenerator implements ISnomedIdentifierGenerator,
 				+ ", externalIdGeneratorPort=" + externalIdGeneratorPort + ", externalIdGeneratorContextRoot="
 				+ externalIdGeneratorContextRoot + "]";
 	}
-	
 	
 }

@@ -16,14 +16,13 @@
 package com.b2international.snowowl.snomed.datastore.id.reservations;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.datastore.SnomedEditingContext;
 import com.b2international.snowowl.snomed.datastore.SnomedTerminologyBrowser;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
-import com.b2international.snowowl.snomed.datastore.internal.id.SnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.ReservationRangeImpl;
+import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SingleIdReservation;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.UniqueInStoreReservation;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.UniqueInTransactionReservation;
 import com.google.inject.Provider;
@@ -43,8 +42,7 @@ public class Reservations {
 	 * @return a {@link Reservation} instance for the given componentId.
 	 */
 	public static Reservation single(final String componentId) {
-		final ISnomedIdentifier id = SnomedIdentifier.of(componentId);
-		return new ReservationRangeImpl(id.getItemId(), id.getItemId(), id.getNamespace(), Collections.singleton(id.getComponentCategory()));
+		return new SingleIdReservation(componentId);
 	}
 
 	/**
