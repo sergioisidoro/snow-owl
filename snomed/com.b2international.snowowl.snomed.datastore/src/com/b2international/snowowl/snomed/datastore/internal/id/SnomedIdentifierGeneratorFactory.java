@@ -27,6 +27,7 @@ import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfigurati
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
 import com.b2international.snowowl.snomed.datastore.id.reservations.ISnomedIdentiferReservationService;
 import com.b2international.snowowl.snomed.datastore.id.reservations.Reservations;
+import com.b2international.snowowl.snomed.datastore.internal.id.reservations.CisExistingIdsReservation;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.SnomedIdentifierReservationServiceImpl;
 import com.google.inject.Provider;
 
@@ -57,23 +58,30 @@ public class SnomedIdentifierGeneratorFactory {
 			throw new NullPointerException(errorMessage);
 		}
 
-		if (idGenerationSource == IdGenerationSource.INTERNAL) {
-			LOGGER.info("Snow Owl is configured to use internal id generation.");
-			final ISnomedIdentiferReservationService reservationService = new SnomedIdentifierReservationServiceImpl();
-			Provider<SnomedTerminologyBrowser> provider = new Provider<SnomedTerminologyBrowser>() {
-				@Override
-				public SnomedTerminologyBrowser get() {
-					return ApplicationContext.getInstance().getService(SnomedTerminologyBrowser.class);
-				}
-			};
+		//we reserve the already assigned ids from Snow Owl
+		final ISnomedIdentiferReservationService reservationService = new SnomedIdentifierReservationServiceImpl();
+		LOGGER.info("Snow Owl is configured to use internal id generation.");
+		Provider<SnomedTerminologyBrowser> provider = new Provider<SnomedTerminologyBrowser>() {
+			@Override
+			public SnomedTerminologyBrowser get() {
+				return ApplicationContext.getInstance().getService(SnomedTerminologyBrowser.class);
+			}
+		};
+		reservationService.create(STORE_RESERVATIONS, Reservations.uniqueInStore(provider));
+		
+		//register the reservation service
+		env.services().registerService(ISnomedIdentiferReservationService.class, reservationService);
 
-			reservationService.create(STORE_RESERVATIONS, Reservations.uniqueInStore(provider));
+		if (idGenerationSource == IdGenerationSource.INTERNAL) {
+
 			final ISnomedIdentifierGenerator idGenerator = new DefaultSnomedIdentifierGenerator(reservationService);
+			
+			//register the internal id generator
 			env.services().registerService(ISnomedIdentifierGenerator.class, idGenerator);
-			env.services().registerService(ISnomedIdentiferReservationService.class, reservationService);
 
 		} else if (idGenerationSource == IdGenerationSource.CIS) {
 
+			
 			String externalIdGeneratorUrl = coreConfiguration.getExternalIdGeneratorUrl();
 			String externalIdGeneratorPort = coreConfiguration.getExternalIdGeneratorPort();
 			String externalIdGeneratorContextRoot = coreConfiguration.getExternalIdGeneratorContextRoot();
@@ -81,8 +89,12 @@ public class SnomedIdentifierGeneratorFactory {
 					externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
 			CisSnomedIdentifierGenerator idGenerator = new CisSnomedIdentifierGenerator(externalIdGeneratorUrl,
 					externalIdGeneratorPort, externalIdGeneratorContextRoot);
+
+			reservationService.create(CisExistingIdsReservation.NAME, new CisExistingIdsReservation(externalIdGeneratorUrl,
+					externalIdGeneratorPort, externalIdGeneratorContextRoot)); //$NON-NLS-N$
+			
+			//register the CIS id generator
 			env.services().registerService(ISnomedIdentifierGenerator.class, idGenerator);
-			env.services().registerService(ISnomedIdentiferReservationService.class, idGenerator);
 		} else {
 			String errorMessage = String.format("Unknown id generation source configured: %s. ", idGenerationSource);
 			LOGGER.error(errorMessage);

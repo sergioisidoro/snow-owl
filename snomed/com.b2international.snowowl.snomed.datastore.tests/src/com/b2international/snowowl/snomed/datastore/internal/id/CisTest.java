@@ -44,7 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * *Not* to test Snow Owl code.
  */
 @FixMethodOrder(MethodSorters.JVM)
-public class IhtsdoIdentifierServiceTest {
+public class CisTest {
 	
 	private final static String SERVICE_URL = "http://107.170.101.181:3000/api"; //$NON-NLS-N$
 	private final static String USERNAME = "snowowl-dev-b2i"; // $NON-NLS-N$
@@ -116,6 +116,30 @@ public class IhtsdoIdentifierServiceTest {
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet httpGet = new HttpGet(SERVICE_URL + "/users/" + USERNAME + "/namespaces?"
 				+ "token=" + tokenString + "&username=" + USERNAME);
+		System.out.println("----------------------------------------");
+		System.out.println("Executing request: " + httpGet.getRequestLine());
+
+		try {
+			HttpResponse response = httpClient.execute(httpGet);
+			System.out.println(response.getStatusLine());
+			String responseString = EntityUtils.toString(response.getEntity());
+			System.out.println("Response: " + responseString);
+			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("Releasing the connection.");
+			httpGet.releaseConnection();
+			httpClient.getConnectionManager().shutdown();
+		}
+	}
+	
+	@Test
+	public void statsTest() {
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpGet httpGet = new HttpGet(SERVICE_URL + "/stats?"
+				+ "token=" + tokenString + "&username=" + USERNAME);
+		
 		System.out.println("----------------------------------------");
 		System.out.println("Executing request: " + httpGet.getRequestLine());
 

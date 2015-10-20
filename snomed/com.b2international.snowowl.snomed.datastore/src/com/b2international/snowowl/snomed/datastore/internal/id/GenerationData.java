@@ -15,6 +15,9 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
+import com.b2international.snowowl.core.terminology.ComponentCategory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Bean to represent id generation data used by IHTSDO's
  * ID generation service.
@@ -30,10 +33,44 @@ package com.b2international.snowowl.snomed.datastore.internal.id;
  * 		"generateLegacyIds": "false"
  *	}
  */
-public class GenerationData extends RegistrationData {
+public class GenerationData extends RequestData {
 	
-	private String generateLegacyIds = "false";
+	private String systemId = "";
 
+	private String generateLegacyIds = "false";
+	
+	@JsonIgnore
+	private ComponentCategory componentCategory;
+
+	/**
+	 * @return the partitionId
+	 */
+	public String getPartitionId() {
+		final StringBuilder buf = new StringBuilder();
+		if (getNamespace() == 0) {
+			buf.append('0');
+		} else {
+			buf.append('1');
+		}
+		// append the second part of the partition-identifier
+		buf.append(componentCategory.ordinal());
+		return buf.toString();
+	}
+	
+	/**
+	 * @return the systemId
+	 */
+	public String getSystemId() {
+		return systemId;
+	}
+
+	/**
+	 * @param systemId the systemId to set
+	 */
+	public void setSystemId(String systemId) {
+		this.systemId = systemId;
+	}
+	
 	/**
 	 * @return the generateLegacyIds
 	 */
@@ -46,6 +83,23 @@ public class GenerationData extends RegistrationData {
 	 */
 	public void setGenerateLegacyIds(String generateLegacyIds) {
 		this.generateLegacyIds = generateLegacyIds;
+	}
+	
+	/**
+	 * Returns the {@link ComponentCategory} of the id to be generated
+	 * 
+	 * @return
+	 */
+	public ComponentCategory getComponentCategory() {
+		return componentCategory;
+	}
+
+	/**
+	 * Sets the {@link ComponentCategory} of the id to be generated
+	 * @param componentCategory
+	 */
+	public void setComponentCategory(ComponentCategory componentCategory) {
+		this.componentCategory = componentCategory;
 	}
 	
 }

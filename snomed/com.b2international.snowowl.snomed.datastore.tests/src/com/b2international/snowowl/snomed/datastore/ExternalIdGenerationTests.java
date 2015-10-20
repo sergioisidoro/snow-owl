@@ -21,7 +21,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.b2international.commons.platform.PlatformUtil;
-import com.b2international.snowowl.snomed.datastore.internal.id.IhtsdoSnomedIdentifierGeneratorTest;
+import com.b2international.snowowl.snomed.datastore.internal.id.CisSnomedIdentifierGeneratorTest;
 import com.b2international.snowowl.test.commons.SnowOwlAppRule;
 
 /**
@@ -30,7 +30,7 @@ import com.b2international.snowowl.test.commons.SnowOwlAppRule;
  */
 @RunWith(Suite.class)
 @SuiteClasses({
-	IhtsdoSnomedIdentifierGeneratorTest.class,
+	CisSnomedIdentifierGeneratorTest.class,
 	
 })
 public class ExternalIdGenerationTests {

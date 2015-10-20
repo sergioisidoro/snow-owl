@@ -16,7 +16,7 @@
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
 /**
- * Bean to represent id registration data used by IHTSDO's
+ * Bean to represent id release or publish data used by IHTSDO's
  * ID generation service.
  * Instances of this class are meant to be serialized and deserialized
  * to and from Json.
@@ -29,11 +29,9 @@ package com.b2international.snowowl.snomed.datastore.internal.id;
  * 		"comment": "string",
  *	}
  */
-public class RegistrationData extends RequestData {
+public class ReleaseAndPublishData extends RequestData {
 	
 	private String sctId;
-	
-	private String systemId = "SnowOwl";
 	
 	/**
 	 * Returns the SNOMED CT identifier to be registered
@@ -49,20 +47,6 @@ public class RegistrationData extends RequestData {
 	 */
 	public void setSctId(String sctId) {
 		this.sctId = sctId;
-	}
-	
-	/**
-	 * @return the systemId
-	 */
-	public String getSystemId() {
-		return systemId;
-	}
-
-	/**
-	 * @param systemId the systemId to set
-	 */
-	public void setSystemId(String systemId) {
-		this.systemId = systemId;
 	}
 	
 }

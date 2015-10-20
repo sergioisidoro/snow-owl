@@ -26,7 +26,7 @@ import com.b2international.snowowl.core.terminology.ComponentCategory;
  * Test to exercise the support for the external id generation service.
  */
 @FixMethodOrder(MethodSorters.JVM)
-public class IhtsdoSnomedIdentifierGeneratorTest {
+public class CisSnomedIdentifierGeneratorTest {
 	
 	private final static String SERVICE_URL = "http://107.170.101.181:3000"; //$NON-NLS-N$
 	private final static String SERVICE_PORT = ":3000"; //$NON-NLS-N$

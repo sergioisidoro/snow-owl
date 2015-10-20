@@ -49,6 +49,7 @@ public class SnomedIdentifierReservationServiceImpl implements ISnomedIdentiferR
 			throw new SnowowlRuntimeException("Reservation already defined: " + reservationName);
 		}
 		reservations.put(reservationName, reservation);
+		
 		LOG.info("Added SNOMED CT Identifier Reservation: {} -> {}", reservationName, reservation);
 	}
 
