@@ -18,9 +18,11 @@ package com.b2international.snowowl.datastore.index.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 
 import com.b2international.snowowl.datastore.index.DocumentUpdater;
 import com.b2international.snowowl.datastore.index.SortKeyMode;
@@ -170,6 +172,17 @@ public abstract class DocumentBuilderBase<T extends DocumentBuilderBase<T>> {
 	
 	public final <F> T removeAll(IndexField<F> field) {
 		field.removeAll(doc);
+		return getSelf();
+	}
+	
+	public final T removeByPrefix(String namePrefix) {
+		final Iterator<IndexableField> fieldItr = doc.iterator();
+		while (fieldItr.hasNext()) {
+			IndexableField field = fieldItr.next();
+			if (field.name().startsWith(namePrefix)) {
+				fieldItr.remove();
+			}
+		}
 		return getSelf();
 	}
 	

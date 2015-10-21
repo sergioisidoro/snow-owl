@@ -17,6 +17,7 @@ package com.b2international.snowowl.datastore.server.snomed.index.change;
 
 import java.util.Set;
 
+import org.eclipse.emf.cdo.CDOObject;
 import org.eclipse.emf.cdo.common.id.CDOIDUtil;
 import org.eclipse.emf.cdo.common.revision.delta.CDOAddFeatureDelta;
 import org.eclipse.emf.cdo.common.revision.delta.CDOClearFeatureDelta;
@@ -54,22 +55,22 @@ import com.google.common.collect.ImmutableSet;
  */
 public class ConceptChangeProcessor extends ChangeSetProcessorBase<SnomedDocumentBuilder> {
 	
-	private Set<String> synonymIds;
-
-	public ConceptChangeProcessor(Set<String> synonymIds) {
+	public ConceptChangeProcessor() {
 		super("concept changes");
-		this.synonymIds = synonymIds;
 	}
 	
 	@Override
 	protected void indexDocuments(ICDOCommitChangeSet commitChangeSet) {
-		for (final Concept concept : getNewComponents(commitChangeSet, Concept.class)) {
+		final FluentIterable<CDOObject> newComponents = FluentIterable.from(commitChangeSet.getNewComponents());
+		final Iterable<Concept> newConcepts = newComponents.filter(Concept.class);
+		final Iterable<SnomedRefSet> newRefSets = newComponents.filter(SnomedRefSet.class);
+		
+		for (final Concept concept : newConcepts) {
 			registerImmutablePropertyUpdates(concept);
 			registerMutablePropertyUpdates(concept);
 		}
 		
 		// index/store reference set properties on concept document
-		final Iterable<SnomedRefSet> newRefSets = FluentIterable.from(commitChangeSet.getNewComponents()).filter(SnomedRefSet.class);
 		for (SnomedRefSet refSet : newRefSets) {
 			registerUpdate(refSet.getIdentifierId(), new RefSetMutablePropertyUpdater(refSet));
 		}
@@ -102,7 +103,7 @@ public class ConceptChangeProcessor extends ChangeSetProcessorBase<SnomedDocumen
 		final String id = concept.getId();
 		registerUpdate(id, new ConceptMutablePropertyUpdater(concept));
 		registerUpdate(id, new ComponentModuleUpdater(concept));
-		registerUpdate(id, new ConceptDescriptionUpdater(concept, synonymIds));
+		registerUpdate(id, new ConceptDescriptionUpdater(concept));
 		registerUpdate(id, new ComponentCompareFieldsUpdater<SnomedDocumentBuilder>(id, CDOIDUtil.getLong(concept.cdoID())));
 	}
 	
@@ -175,7 +176,5 @@ public class ConceptChangeProcessor extends ChangeSetProcessorBase<SnomedDocumen
 		public boolean hasAllowedChanges() {
 			return hasAllowedChanges;
 		}
-		
 	}
-
 }

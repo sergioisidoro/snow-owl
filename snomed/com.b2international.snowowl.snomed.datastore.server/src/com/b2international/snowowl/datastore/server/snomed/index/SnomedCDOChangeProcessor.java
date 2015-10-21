@@ -410,14 +410,14 @@ public class SnomedCDOChangeProcessor implements ICDOChangeProcessor {
 		
 		final ComponentLabelChangeProcessor labelChangeProcessor = new ComponentLabelChangeProcessor(branchPath, index);
 		final List<ChangeSetProcessor<SnomedDocumentBuilder>> changeSetProcessors = ImmutableList.<ChangeSetProcessor<SnomedDocumentBuilder>>builder()
-				.add(new ConceptChangeProcessor(synonymIds))
+				.add(new ConceptChangeProcessor())
 				.add(new ConceptReferringMemberChangeProcessor(new Function<CDOID, Document>() {
 					@Override public Document apply(CDOID input) {
 						return getDocumentForDetachedMember(input);
 					}
 				}))
 				.add(new RelationshipChangeProcessor())
-				.add(new DescriptionChangeProcessor(synonymIds))
+				.add(new DescriptionChangeProcessor())
 				.add(new TaxonomyChangeProcessor(getAndCheckInferredNewTaxonomyBuilder(), getInferredPreviousTaxonomyBuilder(), inferredDifferenceSupplier,  ""))
 				.add(new TaxonomyChangeProcessor(getAndCheckStatedNewTaxonomyBuilder(), getStatedPreviousTaxonomyBuilder(), statedDifferenceSupplier, Concepts.STATED_RELATIONSHIP))
 				.add(new IconChangeProcessor(branchPath, getAndCheckInferredNewTaxonomyBuilder(), getInferredPreviousTaxonomyBuilder(), inferredDifferenceSupplier))

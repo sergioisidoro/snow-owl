@@ -37,11 +37,8 @@ import com.b2international.snowowl.snomed.datastore.index.update.DescriptionMuta
  */
 public class DescriptionChangeProcessor extends ChangeSetProcessorBase<SnomedDocumentBuilder> {
 
-	private Set<String> synonymIds;
-
-	public DescriptionChangeProcessor(Set<String> synonymIds) {
+	public DescriptionChangeProcessor() {
 		super("description changes");
-		this.synonymIds = synonymIds;
 	}
 
 	@Override
@@ -62,7 +59,7 @@ public class DescriptionChangeProcessor extends ChangeSetProcessorBase<SnomedDoc
 			registerMutablePropertyUpdates(description);
 		}
 		for (Concept concept : concepts) {
-			registerUpdate(concept.getId(), new ConceptDescriptionUpdater(concept, synonymIds));
+			registerUpdate(concept.getId(), new ConceptDescriptionUpdater(concept));
 		}
 	}
 
@@ -82,5 +79,4 @@ public class DescriptionChangeProcessor extends ChangeSetProcessorBase<SnomedDoc
 		registerUpdate(id, new DescriptionMutablePropertyUpdater(description));
 		registerUpdate(id, new ComponentModuleUpdater(description));
 	}
-
 }

@@ -65,15 +65,10 @@ public abstract class SnomedIndexBrowserConstants {
 
 	public static final String REFERENCE_SET_MEMBER_UUID = "ref_set_member_uuid";
 	public static final String REFERENCE_SET_MEMBER_ACCEPTABILITY_ID = "ref_set_member_acceptability_id";
-	public static final String REFERENCE_SET_MEMBER_ACCEPTABILITY_LABEL = "ref_set_member_acceptability_label";
 	public static final String REFERENCE_SET_MEMBER_VALUE_ID = "ref_set_member_value_id";
-	public static final String REFERENCE_SET_MEMBER_VALUE_LABEL = "ref_set_member_value_label";
 	public static final String REFERENCE_SET_MEMBER_TARGET_COMPONENT_ID = "ref_set_member_target_component_id";
-	public static final String REFERENCE_SET_MEMBER_TARGET_COMPONENT_LABEL = "ref_set_member_target_component_label";
 	public static final String REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_ID = "ref_set_member_map_target_component_id";
 	public static final String REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_TYPE_ID = "ref_set_member_map_target_component_type_id";
-	public static final String REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_LABEL = "ref_set_member_map_target_component_label";
-	public static final String REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_DESCRIPTION_SORT_KEY = "ref_set_member_map_target_component_description_sort_key";
 	public static final String REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_DESCRIPTION = "ref_set_member_map_target_component_description";
 	public static final String REFERENCE_SET_MEMBER_MAP_GROUP = "ref_set_member_map_group";
 	public static final String REFERENCE_SET_MEMBER_MAP_PRIORITY = "ref_set_member_map_priority";
@@ -82,14 +77,12 @@ public abstract class SnomedIndexBrowserConstants {
 	public static final String REFERENCE_SET_MEMBER_MAP_CATEGORY_ID = "ref_set_member_category_id";
 	public static final String REFERENCE_SET_MEMBER_CORRELATION_ID = "ref_set_member_correlation_id";
 	public static final String REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_ID = "ref_set_member_description_format_id";
-	public static final String REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_LABEL = "ref_set_member_description_format_label";
 	public static final String REFERENCE_SET_MEMBER_DESCRIPTION_LENGTH = "ref_set_member_description_length";
 	public static final String REFERENCE_SET_MEMBER_OPERATOR_ID = "ref_set_member_operator_id";
 	public static final String REFERENCE_SET_MEMBER_SERIALIZED_VALUE = "ref_set_member_serialized_value";
 	public static final String REFERENCE_SET_MEMBER_CONTAINER_MODULE_ID = "ref_set_member_container_module_ID";
 	public static final String REFERENCE_SET_MEMBER_UOM_ID = "ref_set_member_uom_id";
 	public static final String REFERENCE_SET_MEMBER_DATA_TYPE_LABEL = "ref_set_member_data_type_label"; //data type value serialized form: e.g.: false
-	public static final String REFERENCE_SET_MEMBER_DATA_TYPE_ID = "ref_set_member_data_type_id";  //data type enumeration literal. e.g.: integer
 	public static final String REFERENCE_SET_MEMBER_DATA_TYPE_VALUE = "ref_set_member_data_type_value";  //data type enumeration ordinal . e.g.: 1 for decimal (com.b2international.snowowl.snomed.snomedrefset.DataType) 
 	public static final String REFERENCE_SET_MEMBER_CHARACTERISTIC_TYPE_ID = "ref_set_member_characteristic_type";
 	public static final String REFERENCE_SET_MEMBER_QUERY = "ref_set_member_query";

@@ -26,6 +26,7 @@ import com.b2international.snowowl.datastore.index.mapping.LongIndexField;
 import com.b2international.snowowl.datastore.index.mapping.Mappings;
 import com.b2international.snowowl.datastore.index.mapping.NumericDocValuesIndexField;
 import com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 
 /**
@@ -34,7 +35,7 @@ import com.google.common.base.Predicates;
 public class SnomedMappings {
 
 	public static final Long ROOT_ID = -1L;
-	
+
 	// common component fields
 	private static final String COMPONENT_MODULE_ID_FIELD_NAME = "component_module_id";
 	private static final String COMPONENT_ACTIVE_FIELD_NAME = "component_active";
@@ -73,6 +74,9 @@ public class SnomedMappings {
 	private static final NumericDocValuesIndexField<Long> DESCRIPTION_TYPE_ID = Mappings.longDocValuesField(DESCRIPTION_TYPE_ID_FIELD_NAME);
 	private static final NumericDocValuesIndexField<Long> DESCRIPTION_CONCEPT_ID = Mappings.longDocValuesField(DESCRIPTION_CONCEPT_ID_FIELD_NAME);
 	
+	// concept term field prefix
+	private static final String CONCEPT_TERM_PREFIX = "concept_term";
+
 	public static boolean isRoot(long parent) {
 		return ROOT_ID == parent;
 	}
@@ -179,4 +183,7 @@ public class SnomedMappings {
 		return Mappings.longField(SnomedIndexBrowserConstants.REFERENCE_SET_STORAGE_KEY);
 	}
 
+	public static IndexField<String> conceptTerm(String firstQualifier, String... restQualifiers) {
+		return Mappings.textField(Joiner.on('_').join(CONCEPT_TERM_PREFIX, firstQualifier, (Object []) restQualifiers));
+	}
 }

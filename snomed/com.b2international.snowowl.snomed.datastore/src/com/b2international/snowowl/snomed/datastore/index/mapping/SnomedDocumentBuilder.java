@@ -22,13 +22,11 @@ import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBr
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.DESCRIPTION_CASE_SIGNIFICANCE_ID;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.DESCRIPTION_EFFECTIVE_TIME;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_ACCEPTABILITY_ID;
-import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_ACCEPTABILITY_LABEL;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_CHARACTERISTIC_TYPE_ID;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_CONTAINER_MODULE_ID;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_CORRELATION_ID;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_DATA_TYPE_VALUE;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_ID;
-import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_LABEL;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_DESCRIPTION_LENGTH;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_EFFECTIVE_TIME;
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.REFERENCE_SET_MEMBER_MAP_ADVICE;
@@ -63,6 +61,7 @@ import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBr
 import static com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants.RELATIONSHIP_VALUE_ID;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 
 import com.b2international.snowowl.core.ApplicationContext;
 import com.b2international.snowowl.datastore.BranchPathUtils;
@@ -76,7 +75,6 @@ import com.b2international.snowowl.datastore.index.mapping.Mappings;
 import com.b2international.snowowl.snomed.SnomedConstants.Concepts;
 import com.b2international.snowowl.snomed.common.SnomedTerminologyComponentConstants;
 import com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants;
-import com.b2international.snowowl.snomed.datastore.index.update.ConceptDescriptionUpdater.DescriptionType;
 import com.b2international.snowowl.snomed.datastore.services.ISnomedComponentService;
 import com.b2international.snowowl.snomed.snomedrefset.SnomedRefSetType;
 import com.google.common.collect.ImmutableSet;
@@ -109,7 +107,6 @@ public class SnomedDocumentBuilder extends DocumentBuilderBase<SnomedDocumentBui
 			// compute type specific fields
 			if (refSetMember) {
 				fieldsToCopy
-					.add(label)
 					.add(SnomedMappings.active())
 					.add(SnomedMappings.module())
 					.add(SnomedMappings.memberRefSetType())
@@ -141,29 +138,26 @@ public class SnomedDocumentBuilder extends DocumentBuilderBase<SnomedDocumentBui
 						.add(Mappings.longField(REFERENCE_SET_MEMBER_MAP_CATEGORY_ID))
 						.add(Mappings.longField(REFERENCE_SET_MEMBER_CORRELATION_ID))
 						.add(Mappings.stringField(REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_ID))
-						.add(Mappings.intField(REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_TYPE_ID))
-						.add(Mappings.stringField(REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_LABEL));
+						.add(Mappings.intField(REFERENCE_SET_MEMBER_MAP_TARGET_COMPONENT_TYPE_ID));
 					break;
 				case DESCRIPTION_TYPE:
 					fieldsToCopy
 						.add(Mappings.longField(REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_ID))
-						.add(Mappings.intField(REFERENCE_SET_MEMBER_DESCRIPTION_LENGTH))
-						.add(Mappings.stringField(REFERENCE_SET_MEMBER_DESCRIPTION_FORMAT_LABEL));
+						.add(Mappings.intField(REFERENCE_SET_MEMBER_DESCRIPTION_LENGTH));
 					break;
 				case LANGUAGE:
 					fieldsToCopy
-						.add(Mappings.longField(REFERENCE_SET_MEMBER_ACCEPTABILITY_ID))
-						.add(Mappings.stringField(REFERENCE_SET_MEMBER_ACCEPTABILITY_LABEL));
+						.add(Mappings.longField(REFERENCE_SET_MEMBER_ACCEPTABILITY_ID));
 					break;
 				case CONCRETE_DATA_TYPE:
 					fieldsToCopy
+						.add(Mappings.label())
 						.add(Mappings.longField(REFERENCE_SET_MEMBER_OPERATOR_ID))
 						.add(Mappings.stringDocValuesField(REFERENCE_SET_MEMBER_SERIALIZED_VALUE))
 						.add(Mappings.longDocValuesField(REFERENCE_SET_MEMBER_UOM_ID))
 						.add(Mappings.longField(REFERENCE_SET_MEMBER_CHARACTERISTIC_TYPE_ID))
 						.add(Mappings.intDocValuesField(REFERENCE_SET_MEMBER_DATA_TYPE_VALUE))
 						.add(Mappings.longDocValuesField(REFERENCE_SET_MEMBER_CONTAINER_MODULE_ID));
-					SortKeyMode.INSTANCE.update(newDocBuilder, label.getValue(doc));
 					break;
 				case SIMPLE_MAP:
 					fieldsToCopy
@@ -214,15 +208,21 @@ public class SnomedDocumentBuilder extends DocumentBuilderBase<SnomedDocumentBui
 						.add(Mappings.intField(REFERENCE_SET_TYPE))
 						.add(Mappings.intField(REFERENCE_SET_REFERENCED_COMPONENT_TYPE))
 						.add(Mappings.intField(REFERENCE_SET_STRUCTURAL));
-					for (DescriptionType descType : DescriptionType.values()) {
-						fieldsToCopy.add(Mappings.textField(descType.getFieldName()));
-					}
 					// handle special fields here
 					SortKeyMode.INSTANCE.update(newDocBuilder, label.getValue(doc));
 					final ISnomedComponentService componentService = ApplicationContext.getInstance().getService(ISnomedComponentService.class);
 					//XXX intentionally works on MAIN
 					final long namespaceId = componentService.getExtensionConceptId(BranchPathUtils.createMainPath(), SnomedMappings.id().getValueAsString(doc));
 					Mappings.searchOnlyLongField(SnomedIndexBrowserConstants.CONCEPT_NAMESPACE_ID).addTo(newDoc, namespaceId);
+					// transfer all concept terms from the source document
+					final String conceptTermPrefix = SnomedMappings.conceptTerm("").fieldName();
+					for (final IndexableField field : doc) {
+						if (field.name().startsWith(conceptTermPrefix)) {
+							// Trim prefix and following underscore
+							final String joinedQualifiers = field.name().substring(conceptTermPrefix.length() + 1);
+							SnomedMappings.conceptTerm(joinedQualifiers).addTo(newDoc, field.stringValue());
+						}
+					}
 					break;
 				case SnomedTerminologyComponentConstants.DESCRIPTION_NUMBER:
 					fieldsToCopy
@@ -260,7 +260,6 @@ public class SnomedDocumentBuilder extends DocumentBuilderBase<SnomedDocumentBui
 			for (IndexField<?> field : fieldsToCopy.build()) {
 				field.copyTo(doc, newDoc);
 			}
-			
 			
 			return newDocBuilder;
 		}
@@ -385,5 +384,8 @@ public class SnomedDocumentBuilder extends DocumentBuilderBase<SnomedDocumentBui
 	public SnomedDocumentBuilder conceptReferringMappingRefSetId(Long value) {
 		return addToDoc(SnomedMappings.conceptReferringMappingRefSetId(), value);
 	}
-
+	
+	public SnomedDocumentBuilder conceptTerm(String value, String firstQualifier, String... restQualifiers) {
+		return update(SnomedMappings.conceptTerm(firstQualifier, restQualifiers), value);
+	}
 }

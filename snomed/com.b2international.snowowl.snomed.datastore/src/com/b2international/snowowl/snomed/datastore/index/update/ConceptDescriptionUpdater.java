@@ -15,107 +15,63 @@
  */
 package com.b2international.snowowl.snomed.datastore.index.update;
 
-import static com.google.common.collect.Sets.newHashSet;
-
-import java.util.Set;
-
 import com.b2international.snowowl.datastore.index.DocumentUpdaterBase;
-import com.b2international.snowowl.datastore.index.mapping.Mappings;
 import com.b2international.snowowl.snomed.Concept;
 import com.b2international.snowowl.snomed.Description;
-import com.b2international.snowowl.snomed.SnomedConstants.Concepts;
-import com.b2international.snowowl.snomed.datastore.browser.SnomedIndexBrowserConstants;
 import com.b2international.snowowl.snomed.datastore.index.mapping.SnomedDocumentBuilder;
+import com.b2international.snowowl.snomed.datastore.index.mapping.SnomedMappings;
+import com.b2international.snowowl.snomed.snomedrefset.SnomedLanguageRefSetMember;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 
 /**
  * @since 4.3
  */
 public class ConceptDescriptionUpdater extends DocumentUpdaterBase<SnomedDocumentBuilder> {
 
-	private Set<String> synonymIds;
-	private Concept concept;
+	private final Concept concept;
 
-	public ConceptDescriptionUpdater(Concept concept, Set<String> synonymIds) {
+	public ConceptDescriptionUpdater(final Concept concept) {
 		super(concept.getId());
 		this.concept = concept;
-		this.synonymIds = synonymIds;
 	}
 
 	@Override
-	public void doUpdate(SnomedDocumentBuilder doc) {
-		
-		for (DescriptionType type : DescriptionType.values()) {
-			doc.removeAll(Mappings.textField(type.getFieldName()));
-		}
-		
-		for (final DescriptionInfo descriptionInfo : getActiveDescriptionInfos()) {
-			doc.tokenizedField(descriptionInfo.getType().getFieldName(), descriptionInfo.getTerm());
-		}
-		
-	}
-	
-	private Set<DescriptionInfo> getActiveDescriptionInfos() {
-		final Set<DescriptionInfo> results = newHashSet();
-		
+	public void doUpdate(final SnomedDocumentBuilder doc) {
+		doc.removeByPrefix(SnomedMappings.conceptTerm("").fieldName());
+
 		for (final Description description : concept.getDescriptions()) {
-			if (description.isActive()) {
-				results.add(createDescriptionInfo(description));
+
+			for (final SnomedLanguageRefSetMember languageRefSetMember : getActiveLanguageMembers(description)) {
+				// concept_term_inactive_900000000000013009_900000000000509007_900000000000548007
+				doc.conceptTerm(description.getTerm(), 
+						getStatus(description.isActive()),
+						description.getType().getId(), 
+						languageRefSetMember.getRefSetIdentifierId(), 
+						languageRefSetMember.getAcceptabilityId());
 			}
-		}
 
-		return results;
-	}
+			// concept_term_inactive_900000000000013009_en
+			doc.conceptTerm(description.getTerm(), 
+					getStatus(description.isActive()),
+					description.getType().getId(),
+					description.getLanguageCode());
 
-	private DescriptionInfo createDescriptionInfo(final Description description) {
-		return new DescriptionInfo(getDescriptionType(description), description.getTerm());
-	}
-
-	private DescriptionType getDescriptionType(final Description description) {
-		final String typeId = description.getType().getId();
-		
-		if (Concepts.FULLY_SPECIFIED_NAME.equals(typeId)) {
-			return DescriptionType.FULLY_SPECIFIED_NAME;
-		} else if (synonymIds.contains(typeId)) {
-			return DescriptionType.SYNONYM;
-		} else {
-			return DescriptionType.OTHER;
+			// concept_term_inactive_900000000000013009
+			doc.conceptTerm(description.getTerm(), 
+					getStatus(description.isActive()),
+					description.getType().getId());
 		}
-	}
-	
-	public enum DescriptionType {
-		FULLY_SPECIFIED_NAME(SnomedIndexBrowserConstants.CONCEPT_FULLY_SPECIFIED_NAME),
-		SYNONYM(SnomedIndexBrowserConstants.CONCEPT_SYNONYM),
-		OTHER(SnomedIndexBrowserConstants.CONCEPT_OTHER_DESCRIPTION);
-		
-		private final String fieldName;
-		
-		private DescriptionType(final String fieldName) {
-			this.fieldName = fieldName;
-		}
-		
-		public String getFieldName() {
-			return fieldName;
-		}
-	}
-	
-	public static final class DescriptionInfo {
-		
-		private final DescriptionType type;
-		private final String term;
-		
-		public DescriptionInfo(final DescriptionType type, final String term) {
-			this.type = type;
-			this.term = term;
-		}
-		
-		public String getTerm() {
-			return term;
-		}
-		
-		public DescriptionType getType() {
-			return type;
-		}
-		
 	}
 
+	private String getStatus(final boolean active) {
+		return active ? "active" : "inactive";
+	}
+
+	private FluentIterable<SnomedLanguageRefSetMember> getActiveLanguageMembers(final Description description) {
+		return FluentIterable.from(description.getLanguageRefSetMembers())
+				.filter(new Predicate<SnomedLanguageRefSetMember>() {
+					@Override public boolean apply(final SnomedLanguageRefSetMember member) { return member.isActive(); }
+				});
+	}
 }
