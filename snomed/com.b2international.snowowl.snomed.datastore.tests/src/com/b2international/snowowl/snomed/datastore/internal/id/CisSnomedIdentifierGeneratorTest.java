@@ -31,12 +31,13 @@ public class CisSnomedIdentifierGeneratorTest {
 	private final static String SERVICE_URL = "http://107.170.101.181:3000"; //$NON-NLS-N$
 	private final static String SERVICE_PORT = ":3000"; //$NON-NLS-N$
 	private final static String SERVICE_CONTEXT_ROOT = "api"; //$NON-NLS-N$
+	private final static String SERVICE_CLIENT_KEY = "snow_owl_dev"; //$NON-NLS-N$
 	private final static String B2I_NAMESPACE = "1000154"; //$NON-NLS-N$
 	
 	@Test
 	public void testExtensionConcept() {
 		CisSnomedIdentifierGenerator generator = 
-				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
+				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
 		
 		String id = generator.generateId(ComponentCategory.CONCEPT, B2I_NAMESPACE);
 		System.out.println("Id: " + id);
@@ -46,7 +47,7 @@ public class CisSnomedIdentifierGeneratorTest {
 	@Test
 	public void testCoreConcept() {
 		CisSnomedIdentifierGenerator generator = 
-				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT);
+				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
 		
 		String id = generator.generateId(ComponentCategory.CONCEPT);
 		System.out.println("Id: " + id);
