@@ -85,13 +85,15 @@ public class SnomedIdentifierGeneratorFactory {
 			String externalIdGeneratorUrl = coreConfiguration.getExternalIdGeneratorUrl();
 			String externalIdGeneratorPort = coreConfiguration.getExternalIdGeneratorPort();
 			String externalIdGeneratorContextRoot = coreConfiguration.getExternalIdGeneratorContextRoot();
-			LOGGER.info("Snow Owl is configured to use ITHSDO's external id generation with URL: {}:{}/{}",
-					externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
+			String externalIdGeneratorClientSoftwareKey = coreConfiguration.getExternalIdGeneratorClientSoftwareKey();
+			
+			LOGGER.info("Snow Owl is configured to use ITHSDO's external id generation with URL: {}:{}/{}, using client key '{}'.",
+					externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot, externalIdGeneratorClientSoftwareKey);
 			CisSnomedIdentifierGenerator idGenerator = new CisSnomedIdentifierGenerator(externalIdGeneratorUrl,
-					externalIdGeneratorPort, externalIdGeneratorContextRoot);
+					externalIdGeneratorPort, externalIdGeneratorContextRoot, externalIdGeneratorClientSoftwareKey);
 
 			reservationService.create(CisExistingIdsReservation.NAME, new CisExistingIdsReservation(externalIdGeneratorUrl,
-					externalIdGeneratorPort, externalIdGeneratorContextRoot)); //$NON-NLS-N$
+					externalIdGeneratorPort, externalIdGeneratorContextRoot, externalIdGeneratorClientSoftwareKey)); //$NON-NLS-N$
 			
 			//register the CIS id generator
 			env.services().registerService(ISnomedIdentifierGenerator.class, idGenerator);

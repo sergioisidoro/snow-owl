@@ -34,8 +34,8 @@ import com.b2international.snowowl.core.config.SnowOwlConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration.IdGenerationSource;
 import com.b2international.snowowl.snomed.datastore.internal.id.IdGeneratorException;
-import com.b2international.snowowl.snomed.datastore.internal.id.IhtsdoCredentials;
-import com.b2international.snowowl.snomed.datastore.internal.id.Token;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.CisCredentials;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -207,7 +207,7 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 	
 	private String getCredentialsString(String userName, String password)
 			throws JsonGenerationException, JsonMappingException, IOException {
-		IhtsdoCredentials credentials = new IhtsdoCredentials(userName, password);
+		CisCredentials credentials = new CisCredentials(userName, password);
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(credentials);
 	}

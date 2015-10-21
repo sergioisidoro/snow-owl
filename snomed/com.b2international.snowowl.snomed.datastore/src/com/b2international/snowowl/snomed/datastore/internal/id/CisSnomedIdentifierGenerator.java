@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 import com.b2international.snowowl.core.IDisposableService;
 import com.b2international.snowowl.core.terminology.ComponentCategory;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifierGenerator;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.GenerationData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.SctId;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.b2international.snowowl.snomed.datastore.internal.id.reservations.CisService;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,10 +52,6 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CisSnomedIdentifierGenerator.class);
 
-	private String externalIdGeneratorUrl;
-	private String externalIdGeneratorPort;
-	private String externalIdGeneratorContextRoot;
-	
 	private boolean isDisposed;
 
 	/**
@@ -62,8 +61,8 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 	 * @param externalIdGeneratorContextRoot
 	 */
 	public CisSnomedIdentifierGenerator(String externalIdGeneratorUrl, String externalIdGeneratorPort,
-			String externalIdGeneratorContextRoot) {
-		super(externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
+			String externalIdGeneratorContextRoot, String externalIdGeneratorClientKey) {
+		super(externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot, externalIdGeneratorClientKey);
 	}
 
 	/*
@@ -180,87 +179,6 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 		
 	}
 
-//	@Override
-//	public void create(String reservationName, Reservation reservation) {
-//		
-//		Preconditions.checkNotNull(reservation, "Reservation is null");
-//		
-//		//Currently we do not support bulk reservations
-//		if (!(reservation instanceof CisSingleIdReservation)) {
-//			throw new IllegalArgumentException("Could not reserve id for reservation type: " + reservation.getClass());
-//		}
-//
-//		CisSingleIdReservation singleIdReservation = (CisSingleIdReservation) reservation;
-//		ISnomedIdentifier snomedIdentifier = singleIdReservation.getSnomedIdentifier();
-//		String sctId = snomedIdentifier.toString();
-//		String namespace = snomedIdentifier.getNamespace();
-//		
-//		String jsonTokenString = null;
-//		LOGGER.info("Create reservation, with name: {} for id {}.", reservationName, sctId);
-//		
-//		try {
-//		jsonTokenString = login();
-//		String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
-//		
-//		if (StringUtils.isEmpty(namespace)) {
-//			String reservationDataString = getRegistrationtionDataString(sctId);
-//			registerId(reservationDataString, tokenString);
-//		} else {
-//			String reservationDataString = getRegistrationtionDataString(sctId, namespace);
-//			registerId(reservationDataString, tokenString);
-//		}
-//		
-//		} catch (IOException e) {
-//			throw new IdGeneratorException("Exception when trying to register SNOMED CT id + " + sctId, e);
-//		} finally {
-//			//try to log out if we logged in
-//			if (jsonTokenString !=null) {
-//				logout(jsonTokenString);
-//			}
-//		}
-//	}
-	
-//	@Override
-//	public Collection<Reservation> getReservations() {
-//		throw new NotImplementedException();
-//	}
-//
-//	@Override
-//	public Reservation getReservation(String reservationName) {
-//		throw new NotImplementedException();
-//	}
-//
-//	@Override
-//	public void delete(String reservationName) {
-//		throw new NotImplementedException();
-//	}
-//
-//	@Override
-//	public boolean isReserved(String componentId) {
-		
-//		HttpGet httpGet = new HttpGet(serviceUrl + "/" + "sct/ids/" + componentId);
-//
-//		LOGGER.info("Is reserved? Request: {}.", httpGet.getRequestLine());
-//		HttpResponse response;
-//		try {
-//			response = httpClient.execute(httpGet);
-//			LOGGER.debug("Response: {}", response.getStatusLine());
-//			
-//			String responseString = EntityUtils.toString(response.getEntity());
-//			ObjectMapper mapper = new ObjectMapper();
-//			SctId sctId = mapper.readValue(responseString, SctId.class);
-//			return !sctId.getStatus().equals("Available");
-//		} catch (ClientProtocolException e) {
-//			throw new IdGeneratorException(e);
-//		} catch (IOException e) {
-//			throw new IdGeneratorException(e);
-//		} finally {
-//			LOGGER.debug("Releasing the connection.");
-//			httpGet.releaseConnection();
-//			httpClient.getConnectionManager().shutdown();
-//		}
-//	}
-
 	@Override
 	public void dispose() {
 		if (httpClient != null) {
@@ -283,6 +201,7 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 	private String getGenerationDataString(int namespace, ComponentCategory componentCategory)
 			throws JsonProcessingException {
 		GenerationData generationData = new GenerationData();
+		generationData.setSoftware(externalIdGeneratorClientKey);
 		generationData.setNamespace(namespace);
 		generationData.setComponentCategory(componentCategory);
 		return mapper.writeValueAsString(generationData);
@@ -296,6 +215,7 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 	private String getGenerationDataString(ComponentCategory componentCategory)
 			throws JsonProcessingException {
 		GenerationData generationData = new GenerationData();
+		generationData.setSoftware(externalIdGeneratorClientKey);
 		generationData.setComponentCategory(componentCategory);
 		return mapper.writeValueAsString(generationData);
 	}

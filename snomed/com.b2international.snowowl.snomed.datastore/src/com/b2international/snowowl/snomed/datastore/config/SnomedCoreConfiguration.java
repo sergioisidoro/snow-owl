@@ -78,6 +78,11 @@ public class SnomedCoreConfiguration {
 	@JsonProperty("externalIdGeneratorPassword")
 	private String externalIdGeneratorPassword;
 	
+	//the key to associate the client software within the external CIS service
+	//e.g. SnowOwl Deployment1
+	@JsonProperty("externalIdGeneratorClientSoftwareKey")
+	private String externalIdGeneratorClientSoftwareKey = "Snow Owl"; //$NON-NLS-N$
+	
 	private boolean concreteDomainSupport;
 	private boolean showReasonerUsageWarning = true;
 	
@@ -247,6 +252,14 @@ public class SnomedCoreConfiguration {
 
 	public void setExternalIdGeneratorPassword(String externalIdGeneratorPassword) {
 		this.externalIdGeneratorPassword = externalIdGeneratorPassword;
+	}
+
+	public String getExternalIdGeneratorClientSoftwareKey() {
+		return externalIdGeneratorClientSoftwareKey;
+	}
+
+	public void setExternalIdGeneratorClientSoftwareKey(String externalIdGeneratorClientSoftwareKey) {
+		this.externalIdGeneratorClientSoftwareKey = externalIdGeneratorClientSoftwareKey;
 	}
 	
 }

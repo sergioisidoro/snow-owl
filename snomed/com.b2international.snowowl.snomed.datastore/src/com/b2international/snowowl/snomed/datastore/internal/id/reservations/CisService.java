@@ -32,7 +32,7 @@ import com.b2international.snowowl.core.SnowOwlApplication;
 import com.b2international.snowowl.core.config.SnowOwlConfiguration;
 import com.b2international.snowowl.snomed.datastore.config.SnomedCoreConfiguration;
 import com.b2international.snowowl.snomed.datastore.internal.id.IdGeneratorException;
-import com.b2international.snowowl.snomed.datastore.internal.id.IhtsdoCredentials;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.CisCredentials;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,12 +51,19 @@ public class CisService {
 	protected ObjectMapper mapper = new ObjectMapper();
 	protected HttpClient httpClient = new DefaultHttpClient();
 	
+	protected String externalIdGeneratorUrl;
+	protected String externalIdGeneratorPort;
+	protected String externalIdGeneratorContextRoot;
+	protected String externalIdGeneratorClientKey;
+	
 	/**
 	 * Construct a CIS service with a service URL
 	 */
 	public CisService(String externalIdGeneratorUrl, String externalIdGeneratorPort,
-			String externalIdGeneratorContextRoot) {
+			String externalIdGeneratorContextRoot, String externalIdGeneratorClientKey) {
 		Preconditions.checkNotNull(externalIdGeneratorUrl, "External id generator URL is null.");
+		Preconditions.checkNotNull(externalIdGeneratorClientKey, "Client key is null.");
+		
 		serviceUrl = externalIdGeneratorUrl;
 
 		if (externalIdGeneratorPort != null) {
@@ -139,7 +146,7 @@ public class CisService {
 	 */
 	protected String getCredentialsString(String userName, String password)
 			throws JsonGenerationException, JsonMappingException, IOException {
-		IhtsdoCredentials credentials = new IhtsdoCredentials(userName, password);
+		CisCredentials credentials = new CisCredentials(userName, password);
 		return mapper.writeValueAsString(credentials);
 	}
 

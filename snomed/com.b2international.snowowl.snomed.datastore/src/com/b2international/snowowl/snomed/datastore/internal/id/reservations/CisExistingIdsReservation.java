@@ -33,10 +33,10 @@ import com.b2international.commons.StringUtils;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.DynamicReservation;
 import com.b2international.snowowl.snomed.datastore.internal.id.IdGeneratorException;
-import com.b2international.snowowl.snomed.datastore.internal.id.RegistrationData;
-import com.b2international.snowowl.snomed.datastore.internal.id.ReleaseAndPublishData;
-import com.b2international.snowowl.snomed.datastore.internal.id.SctId;
-import com.b2international.snowowl.snomed.datastore.internal.id.Token;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.RegistrationData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.ReleaseAndPublishData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.SctId;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -56,8 +56,8 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	 * @param externalIdGeneratorContextRoot
 	 */
 	public CisExistingIdsReservation(String externalIdGeneratorUrl, String externalIdGeneratorPort,
-			String externalIdGeneratorContextRoot) {
-		super(externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot);
+			String externalIdGeneratorContextRoot, String externalIdGeneratorClientKey) {
+		super(externalIdGeneratorUrl, externalIdGeneratorPort, externalIdGeneratorContextRoot, externalIdGeneratorClientKey);
 	}
 
 	/* (non-Javadoc)
@@ -311,6 +311,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	private String getRegistrationtionDataString(String sctId, String namespace)
 			throws JsonProcessingException {
 		RegistrationData registrationData = new RegistrationData();
+		registrationData.setSoftware(externalIdGeneratorClientKey);
 		registrationData.setSctId(sctId);
 		registrationData.setNamespace(Integer.valueOf(namespace));
 		return mapper.writeValueAsString(registrationData);
@@ -324,6 +325,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	private String getRegistrationtionDataString(String sctId)
 			throws JsonProcessingException {
 		RegistrationData registrationData = new RegistrationData();
+		registrationData.setSoftware(externalIdGeneratorClientKey);
 		registrationData.setSctId(sctId);
 		return mapper.writeValueAsString(registrationData);
 	}
@@ -336,6 +338,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	private String getReleaseOrPublishDataString(String sctId, String namespace)
 			throws JsonProcessingException {
 		ReleaseAndPublishData data = new ReleaseAndPublishData();
+		data.setSoftware(externalIdGeneratorClientKey);
 		data.setSctId(sctId);
 		data.setNamespace(Integer.valueOf(namespace));
 		return mapper.writeValueAsString(data);
@@ -349,6 +352,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	private String getReleaseOrPublishDataString(String sctId)
 			throws JsonProcessingException {
 		ReleaseAndPublishData data = new ReleaseAndPublishData();
+		data.setSoftware(externalIdGeneratorClientKey);
 		data.setSctId(sctId);
 		return mapper.writeValueAsString(data);
 	}
