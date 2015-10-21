@@ -17,6 +17,7 @@ package com.b2international.snowowl.snomed.datastore.internal.id;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -36,13 +37,18 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
-import com.b2international.snowowl.snomed.datastore.internal.id.beans.GenerationData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.BulkGenerationData;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.CisCredentials;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.GenerationData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.IdRecord;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thoughtworks.xstream.io.xml.SjsxpDriver;
 
 /**
  * Sandbox to exercise the IHTSDO SNOMED CT identifier service endpoints.
@@ -58,6 +64,7 @@ public class CisTest {
 
 	private static String jsonTokenString;
 	private static String tokenString;
+	private static ObjectMapper mapper = new ObjectMapper();
 	
 	private static List<String> componentIds = new ArrayList<String>();
 	
@@ -80,10 +87,18 @@ public class CisTest {
 			e.printStackTrace();
 		}
 	}
+	
+	@Test
+	public void getIdTest() throws JsonParseException, JsonMappingException, IOException {
+		String jsonString = "{\"id\":650,\"name\":\"Generate SctIds\",\"status\":\"0\",\"request\":{\"namespace\":1000154,\"software\":\"Snow Owl\",\"comment\":\"Requested by Snow Owl\",\"quantity\":2,\"systemIds\":[],\"generateLegacyIds\":\"false\",\"partitionId\":\"12\",\"author\":\"snowowl-dev-b2i\",\"model\":\"SctId\",\"type\":\"Generate SctIds\"},"
+				+ "\"log\":null,\"created_at\":\"2015-10-21T11:13:37.317Z\",\"modified_at\":\"2015-10-21T11:13:37.317Z\"}";
+		JsonNode root = mapper.readValue(jsonString, JsonNode.class);
+		System.out.println("Id: " + root.get("id"));
+		
+	}
 
 	private String getCredentialsString() throws JsonGenerationException, JsonMappingException, IOException {
 		CisCredentials credentials = new CisCredentials(USERNAME, PASSWORD);
-		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(credentials);
 	}
 
@@ -103,7 +118,6 @@ public class CisTest {
 			System.out.println(response.getStatusLine());
 			
 			jsonTokenString = EntityUtils.toString(response.getEntity());
-			ObjectMapper mapper = new ObjectMapper();
 			tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
 			
 			System.out.println("Json token: " + jsonTokenString + ", token: " + tokenString);
@@ -118,24 +132,53 @@ public class CisTest {
 		
 	}
 	
-	public void bulkReservationTest() {
+	@Test
+	public void bulkGenerateTest() {
 		//create a job to generate sct ids
 		HttpClient httpClient = new DefaultHttpClient();
-		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "sct/generate?token=" + tokenString);
+		HttpPost httpPost = new HttpPost(SERVICE_URL + "/sct/bulk/generate?token=" + tokenString);
 		System.out.println("----------------------------------------");
 		System.out.println("Executing request: " + httpPost.getRequestLine());
 
 		try {
-			String generationDataString = getGenerationDataString();
+			String generationDataString = getBulkGenerationDataString();
 			System.out.println("Generation data: " + generationDataString);
 			httpPost.setEntity(new StringEntity(generationDataString, ContentType.create("application/json")));
 			HttpResponse response = httpClient.execute(httpPost);
 			
 			System.out.println(response.getStatusLine());
 			
-			String conceptId = EntityUtils.toString(response.getEntity());
+			String responseString = EntityUtils.toString(response.getEntity());
+			JsonNode root = mapper.readValue(responseString, JsonNode.class);
+			String id = root.get("id").asText();
+			System.out.println("Id: " + id);
 			
-			System.out.println("ConceptId: " + conceptId);
+			//poll the status
+			int statusInt = 0;
+			while (statusInt == 0) {
+				HttpGet httpGet = new HttpGet(SERVICE_URL + "/bulk/jobs/" + id + "?token=" + tokenString);
+				response = httpClient.execute(httpGet);
+				
+				System.out.println(response.getStatusLine());
+				
+				responseString = EntityUtils.toString(response.getEntity());
+				System.out.println("Jobs response: " + responseString);
+				JsonNode root2 = mapper.readValue(responseString, JsonNode.class);
+				String status = root2.get("status").asText();
+				System.out.println("Status: " + status);
+				statusInt = Integer.valueOf(status);
+			}
+			
+			//getting the records
+			HttpGet httpGet = new HttpGet(SERVICE_URL + "/bulk/jobs/" + id + "/records?token=" + tokenString);
+			response = httpClient.execute(httpGet);
+			
+			System.out.println(response.getStatusLine());
+			
+			responseString = EntityUtils.toString(response.getEntity());
+			System.out.println("Records response: " + responseString);
+			IdRecord[] idRecords = mapper.readValue(responseString, IdRecord[].class);
+			System.out.println("Idrecord: " + Arrays.toString(idRecords));
 			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -146,7 +189,8 @@ public class CisTest {
 		}
 	}
 	
-	@Test
+
+	//@Test
 	public void namespacesTest() {
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet httpGet = new HttpGet(SERVICE_URL + "/users/" + USERNAME + "/namespaces?"
@@ -193,8 +237,8 @@ public class CisTest {
 		}
 	}
 	
-	@Test
-	public void getConceptIdTest() {
+	//@Test
+	public void generateTest() {
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "sct/generate?token=" + tokenString);
 		System.out.println("----------------------------------------");
@@ -229,7 +273,17 @@ public class CisTest {
 		GenerationData generationData = new GenerationData();
 		generationData.setNamespace(B2I_NAMESPACE);
 		generationData.setComponentCategory(ComponentCategory.RELATIONSHIP);
-		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(generationData);
+	}
+	
+	/**
+	 * @return
+	 */
+	private String getBulkGenerationDataString() throws JsonProcessingException {
+		BulkGenerationData generationData = new BulkGenerationData();
+		generationData.setNamespace(B2I_NAMESPACE);
+		generationData.setQuantity(2);
+		generationData.setComponentCategory(ComponentCategory.RELATIONSHIP);
 		return mapper.writeValueAsString(generationData);
 	}
 

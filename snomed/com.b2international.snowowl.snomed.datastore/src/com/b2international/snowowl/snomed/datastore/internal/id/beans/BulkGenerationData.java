@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
   "generateLegacyIds": "false"
   }
  */
-public class BulkGenerationData extends RequestData {
+public class BulkGenerationData extends CisRequestData {
 
 	//the number of ids to be generated
 	private int quantity;

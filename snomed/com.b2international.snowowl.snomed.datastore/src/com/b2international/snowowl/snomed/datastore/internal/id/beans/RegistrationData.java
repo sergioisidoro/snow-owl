@@ -29,7 +29,7 @@ package com.b2international.snowowl.snomed.datastore.internal.id.beans;
  * 		"comment": "string",
  *	}
  */
-public class RegistrationData extends RequestData {
+public class RegistrationData extends CisRequestData {
 	
 	private String sctId;
 	

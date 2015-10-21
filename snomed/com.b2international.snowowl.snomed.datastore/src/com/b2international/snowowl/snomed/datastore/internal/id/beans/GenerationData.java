@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * 		"generateLegacyIds": "false"
  *	}
  */
-public class GenerationData extends RequestData {
+public class GenerationData extends CisRequestData {
 	
 	private String systemId = "";
 

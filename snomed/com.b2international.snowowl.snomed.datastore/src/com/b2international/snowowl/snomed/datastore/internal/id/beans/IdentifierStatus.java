@@ -15,38 +15,31 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id.beans;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
- * Bean to represent id release or publish data used by IHTSDO's
- * ID generation service.
- * Instances of this class are meant to be serialized and deserialized
- * to and from Json.
- *
- *	{
- * 		"sctId" : "string"
- * 		"namespace": 0,
- * 		"systemId": "string",
- * 		"software": "string",
- * 		"comment": "string",
- *	}
+ * CIM identifier states
  */
-public class ReleaseAndPublishData extends CisRequestData {
-	
-	private String sctId;
-	
-	/**
-	 * Returns the SNOMED CT identifier to be registered
-	 * @return
-	 */
-	public String getSctId() {
-		return sctId;
+public enum IdentifierStatus {
+
+	AVAILABLE("Available"), RESERVED("Reserved"), ASSIGNED("Assigned"), PUBLISHED("Published"), DEPRECATED(
+			"Deprecated");
+
+	private String serializedName;
+
+	private IdentifierStatus(String serializedName) {
+		this.serializedName = serializedName;
 	}
 
-	/**
-	 * Sets the SNOMED CT identifier to be registered
-	 * @param sctId
-	 */
-	public void setSctId(String sctId) {
-		this.sctId = sctId;
+	@JsonCreator
+	public static IdentifierStatus fromString(String serializedName) {
+		return serializedName == null ? null : IdentifierStatus.valueOf(serializedName.toUpperCase());
 	}
-	
+
+	@JsonValue
+	public String getSerializedName() {
+		return serializedName;
+	}
+
 }

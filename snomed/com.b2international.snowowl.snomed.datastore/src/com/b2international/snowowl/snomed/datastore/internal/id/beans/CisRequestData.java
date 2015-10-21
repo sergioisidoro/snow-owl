@@ -19,7 +19,7 @@ package com.b2international.snowowl.snomed.datastore.internal.id.beans;
  * Superclass to hold common bean properties for Json requests sent to the CIS. 
  *
  */
-public class RequestData {
+public class CisRequestData {
 
 	private int namespace;
 	
