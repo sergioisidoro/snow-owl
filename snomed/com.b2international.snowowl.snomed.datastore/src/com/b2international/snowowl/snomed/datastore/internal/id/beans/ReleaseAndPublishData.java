@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.b2international.snowowl.snomed.datastore.internal.id;
+package com.b2international.snowowl.snomed.datastore.internal.id.beans;
 
 /**
  * Bean to represent id release or publish data used by IHTSDO's

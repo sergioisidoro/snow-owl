@@ -13,30 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.b2international.snowowl.snomed.datastore.internal.id;
+package com.b2international.snowowl.snomed.datastore.internal.id.beans;
 
 /**
- * Bean to represent credentials used by IHTSDO's
- * ID generation service.
+ * Bean to represent a token used by IHTSDO's ID generation service.
  * Instances of this class are meant to be serialized and deserialized
  * to and from Json.
+ *
  */
-public class IhtsdoCredentials {
+public class Token {
+	
+	private String token;
 
-	private String username;
-	private String password;
-
-	public IhtsdoCredentials(String username, String password) {
-		this.username = username;
-		this.password = password;
+	/**
+	 * Returns the token
+	 * @return
+	 */
+	public String getToken() {
+		return token;
 	}
 
-	public String getUsername() {
-		return username;
+	/**
+	 * Sets the token
+	 * @param token
+	 */
+	public void setToken(String token) {
+		this.token = token;
 	}
-
-	public String getPassword() {
-		return password;
-	}
-
 }
