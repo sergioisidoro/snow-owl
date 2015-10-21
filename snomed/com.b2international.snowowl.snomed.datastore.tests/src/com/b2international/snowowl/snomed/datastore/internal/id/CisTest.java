@@ -16,6 +16,8 @@
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -34,6 +36,9 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.GenerationData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.CisCredentials;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,9 +59,11 @@ public class CisTest {
 	private static String jsonTokenString;
 	private static String tokenString;
 	
+	private static List<String> componentIds = new ArrayList<String>();
+	
 	//@Test
 	public void credentialJsonTest() throws JsonGenerationException, JsonMappingException, IOException {
-		IhtsdoCredentials credentials = new IhtsdoCredentials(USERNAME, PASSWORD);
+		CisCredentials credentials = new CisCredentials(USERNAME, PASSWORD);
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.writeValue(System.out, credentials);
 	}
@@ -75,7 +82,7 @@ public class CisTest {
 	}
 
 	private String getCredentialsString() throws JsonGenerationException, JsonMappingException, IOException {
-		IhtsdoCredentials credentials = new IhtsdoCredentials(USERNAME, PASSWORD);
+		CisCredentials credentials = new CisCredentials(USERNAME, PASSWORD);
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(credentials);
 	}
@@ -109,6 +116,34 @@ public class CisTest {
 			httpClient.getConnectionManager().shutdown();
 		}
 		
+	}
+	
+	public void bulkReservationTest() {
+		//create a job to generate sct ids
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpPost httpPost = new HttpPost(SERVICE_URL + "/" + "sct/generate?token=" + tokenString);
+		System.out.println("----------------------------------------");
+		System.out.println("Executing request: " + httpPost.getRequestLine());
+
+		try {
+			String generationDataString = getGenerationDataString();
+			System.out.println("Generation data: " + generationDataString);
+			httpPost.setEntity(new StringEntity(generationDataString, ContentType.create("application/json")));
+			HttpResponse response = httpClient.execute(httpPost);
+			
+			System.out.println(response.getStatusLine());
+			
+			String conceptId = EntityUtils.toString(response.getEntity());
+			
+			System.out.println("ConceptId: " + conceptId);
+			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("Releasing the connection.");
+			httpPost.releaseConnection();
+			httpClient.getConnectionManager().shutdown();
+		}
 	}
 	
 	@Test
