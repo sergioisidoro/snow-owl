@@ -336,6 +336,7 @@ public class CisTest {
 			System.out.println("----------------------------------------");
 			System.out.println(response.getStatusLine());
 			System.out.println(EntityUtils.toString(response.getEntity()));
+			
 			// } finally {
 			// response.close();
 			// }
