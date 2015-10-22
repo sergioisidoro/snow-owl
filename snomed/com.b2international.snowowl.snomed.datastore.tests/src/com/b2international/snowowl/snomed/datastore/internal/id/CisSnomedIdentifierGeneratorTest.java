@@ -15,12 +15,18 @@
  */
 package com.b2international.snowowl.snomed.datastore.internal.id;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.b2international.snowowl.core.terminology.ComponentCategory;
+import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
+import com.b2international.snowowl.snomed.datastore.internal.id.reservations.CisExistingIdsReservation;
+import com.google.common.collect.Lists;
 
 /**
  * Test to exercise the support for the external id generation service.
@@ -34,8 +40,29 @@ public class CisSnomedIdentifierGeneratorTest {
 	private final static String SERVICE_CLIENT_KEY = "snow_owl_dev"; //$NON-NLS-N$
 	private final static String B2I_NAMESPACE = "1000154"; //$NON-NLS-N$
 	
+	//@Test
+	public void bulkGenerateTest() throws Exception {
+		
+		CisSnomedIdentifierGenerator generator = 
+				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
+		
+		Collection<String> generateIds = generator.generateIds(3, ComponentCategory.CONCEPT);
+		for (String id : generateIds) {
+			System.out.println("Generated id: " + id);
+		}
+		Assert.assertEquals(3, generateIds.size());
+	}
+	
 	@Test
-	public void testExtensionConcept() {
+	public void bulkPublishTest() {
+		CisExistingIdsReservation reservation = new CisExistingIdsReservation(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
+		ArrayList<ISnomedIdentifier> componentsToPublish = Lists.newArrayList(SnomedIdentifier.of("356000"),
+				SnomedIdentifier.of("357009"));
+		reservation.publish(componentsToPublish);
+	}
+	
+	//@Test
+	public void generateExtensionConceptTest() {
 		CisSnomedIdentifierGenerator generator = 
 				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
 		
@@ -44,8 +71,8 @@ public class CisSnomedIdentifierGeneratorTest {
 		Assert.assertNotNull(id);
 	}
 	
-	@Test
-	public void testCoreConcept() {
+	//@Test
+	public void generateCoreConceptTest() {
 		CisSnomedIdentifierGenerator generator = 
 				new CisSnomedIdentifierGenerator(SERVICE_URL, SERVICE_PORT, SERVICE_CONTEXT_ROOT, SERVICE_CLIENT_KEY);
 		

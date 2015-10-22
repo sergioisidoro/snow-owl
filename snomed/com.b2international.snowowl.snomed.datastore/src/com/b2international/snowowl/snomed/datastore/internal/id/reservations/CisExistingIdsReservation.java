@@ -33,13 +33,19 @@ import com.b2international.commons.StringUtils;
 import com.b2international.snowowl.snomed.datastore.id.ISnomedIdentifier;
 import com.b2international.snowowl.snomed.datastore.id.reservations.DynamicReservation;
 import com.b2international.snowowl.snomed.datastore.internal.id.IdGeneratorException;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.BulkPublishData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.BulkRegisterData;
+import com.b2international.snowowl.snomed.datastore.internal.id.beans.BulkRegisterData.Record;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.RegistrationData;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.ReleaseAndPublishData;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.SctId;
 import com.b2international.snowowl.snomed.datastore.internal.id.beans.Token;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 
 /**
  * Reservation that delegates work to the third-party CIS.
@@ -169,7 +175,58 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	 */
 	@Override
 	public void register(Collection<ISnomedIdentifier> snomedIdentifiers) {
-		// TODO Auto-generated method stub
+		String jsonTokenString = null;
+		HttpPost httpPost = null;
+		HttpGet httpGet = null;
+		
+		try {
+			String bulkRegisterDataString = getBulkRegisterDataString(snomedIdentifiers);
+			jsonTokenString = login();
+			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
+
+			LOGGER.info("Bulk register data: {}.", bulkRegisterDataString);
+
+			// create the job
+			httpPost = new HttpPost(serviceUrl + "/sct/bulk/register?token=" + tokenString);
+			httpPost.setEntity(new StringEntity(bulkRegisterDataString, ContentType.create("application/json")));
+			HttpResponse response = httpClient.execute(httpPost);
+
+			LOGGER.info("Bulk register job response: {}", response.getStatusLine());
+
+			String responseString = EntityUtils.toString(response.getEntity());
+			JsonNode root = mapper.readValue(responseString, JsonNode.class);
+			String id = root.get(JSON_JOB_ID_KEY).asText();
+			LOGGER.info("Register job id: {}.", id);
+
+			//poll the job until the results are ready
+			pollJobStatus(tokenString, id);
+
+			// getting the records
+			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
+			response = httpClient.execute(httpGet);
+
+			LOGGER.debug("Bulk publication record retrival response: {}", response.getStatusLine());
+
+			responseString = EntityUtils.toString(response.getEntity());
+			LOGGER.debug("Records response: {}.", responseString);
+		} catch (Exception e) {
+			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
+		} finally {
+			// try to log out if we logged in
+			if (jsonTokenString != null) {
+				logout(jsonTokenString);
+			}
+			LOGGER.debug("Releasing the connections.");
+			if (httpPost != null) {
+				httpPost.releaseConnection();
+			}
+			
+			if (httpGet != null) {
+				httpGet.releaseConnection();
+			}
+			//just in case the logout did not shut it down
+			httpClient.getConnectionManager().shutdown();
+		}
 		
 	}
 
@@ -178,7 +235,58 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	 */
 	@Override
 	public void unregister(Collection<ISnomedIdentifier> snomedIdentifiers) {
-		// TODO Auto-generated method stub
+		String jsonTokenString = null;
+		HttpPut httpPut = null;
+		HttpGet httpGet = null;
+		
+		try {
+			String bulkReleaseDataString = getBulkPublishOrReleaseDataString(snomedIdentifiers);
+			jsonTokenString = login();
+			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
+
+			LOGGER.info("Bulk release data: {}.", bulkReleaseDataString);
+
+			// create the job
+			httpPut = new HttpPut(serviceUrl + "/sct/bulk/release?token=" + tokenString);
+			httpPut.setEntity(new StringEntity(bulkReleaseDataString, ContentType.create("application/json")));
+			HttpResponse response = httpClient.execute(httpPut);
+
+			LOGGER.info("Bulk release job response: {}", response.getStatusLine());
+
+			String responseString = EntityUtils.toString(response.getEntity());
+			JsonNode root = mapper.readValue(responseString, JsonNode.class);
+			String id = root.get(JSON_JOB_ID_KEY).asText();
+			LOGGER.info("Register job id: {}.", id);
+
+			//poll the job until the results are ready
+			pollJobStatus(tokenString, id);
+
+			// getting the records
+			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
+			response = httpClient.execute(httpGet);
+
+			LOGGER.debug("Bulk release record retrival response: {}", response.getStatusLine());
+
+			responseString = EntityUtils.toString(response.getEntity());
+			LOGGER.debug("Records response: {}.", responseString);
+		} catch (Exception e) {
+			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
+		} finally {
+			// try to log out if we logged in
+			if (jsonTokenString != null) {
+				logout(jsonTokenString);
+			}
+			LOGGER.debug("Releasing the connections.");
+			if (httpPut != null) {
+				httpPut.releaseConnection();
+			}
+			
+			if (httpGet != null) {
+				httpGet.releaseConnection();
+			}
+			//just in case the logout did not shut it down
+			httpClient.getConnectionManager().shutdown();
+		}
 		
 	}
 
@@ -222,7 +330,59 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 	 */
 	@Override
 	public void publish(Collection<ISnomedIdentifier> snomedIdentifiers) {
-		// TODO Auto-generated method stub
+
+		String jsonTokenString = null;
+		HttpPut httpPut = null;
+		HttpGet httpGet = null;
+		
+		try {
+			String generationDataString = getBulkPublishOrReleaseDataString(snomedIdentifiers);
+			jsonTokenString = login();
+			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
+
+			LOGGER.info("Publish data: {}.", generationDataString);
+
+			// create the job
+			httpPut = new HttpPut(serviceUrl + "/sct/bulk/publish?token=" + tokenString);
+			httpPut.setEntity(new StringEntity(generationDataString, ContentType.create("application/json")));
+			HttpResponse response = httpClient.execute(httpPut);
+
+			LOGGER.info("Bulk publish job response: {}", response.getStatusLine());
+
+			String responseString = EntityUtils.toString(response.getEntity());
+			JsonNode root = mapper.readValue(responseString, JsonNode.class);
+			String id = root.get(JSON_JOB_ID_KEY).asText();
+			LOGGER.info("Job id: {}.", id);
+
+			//poll the job until the results are ready
+			pollJobStatus(tokenString, id);
+
+			// getting the records
+			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
+			response = httpClient.execute(httpGet);
+
+			LOGGER.debug("Bulk publication record retrival response: {}", response.getStatusLine());
+
+			responseString = EntityUtils.toString(response.getEntity());
+			LOGGER.debug("Records response: {}.", responseString);
+		} catch (Exception e) {
+			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
+		} finally {
+			// try to log out if we logged in
+			if (jsonTokenString != null) {
+				logout(jsonTokenString);
+			}
+			LOGGER.debug("Releasing the connections.");
+			if (httpPut != null) {
+				httpPut.releaseConnection();
+			}
+			
+			if (httpGet != null) {
+				httpGet.releaseConnection();
+			}
+			//just in case the logout did not shut it down
+			httpClient.getConnectionManager().shutdown();
+		}
 	}
 
 	/*
@@ -356,5 +516,41 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		data.setSctId(sctId);
 		return mapper.writeValueAsString(data);
 	}
+	
+	/*
+	 * @return
+	 * @throws JsonProcessingException 
+	 */
+	private String getBulkPublishOrReleaseDataString(Collection<ISnomedIdentifier> snomedIdentifiers) throws JsonProcessingException {
+		BulkPublishData generationData = new BulkPublishData();
+		generationData.setSoftware(externalIdGeneratorClientKey);
+		
+		Collection<String> sctIds = Collections2.transform(snomedIdentifiers, new Function<ISnomedIdentifier, String>() {
+
+			@Override
+			public String apply(ISnomedIdentifier input) {
+				return input.toString();
+			}
+		});
+		generationData.setSctids(sctIds);
+		return mapper.writeValueAsString(generationData);
+	}
+	
+	/*
+	 * @return
+	 * @throws JsonProcessingException 
+	 */
+	private String getBulkRegisterDataString(Collection<ISnomedIdentifier> snomedIdentifiers) throws JsonProcessingException {
+		BulkRegisterData registerData = new BulkRegisterData();
+		registerData.setSoftware(externalIdGeneratorClientKey);
+		
+		for (ISnomedIdentifier snomedIdentifier : snomedIdentifiers) {
+			Record record = registerData.new Record();
+			record.setSctid(snomedIdentifier.toString());
+			registerData.addRecord(record);
+		}
+		return mapper.writeValueAsString(registerData);
+	}
+
 
 }

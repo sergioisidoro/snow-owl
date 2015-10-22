@@ -149,13 +149,13 @@ public class CisTest {
 			System.out.println(response.getStatusLine());
 			
 			String responseString = EntityUtils.toString(response.getEntity());
-			JsonNode root = mapper.readValue(responseString, JsonNode.class);
-			String id = root.get("id").asText();
+			JsonNode responseRoot = mapper.readValue(responseString, JsonNode.class);
+			String id = responseRoot.get("id").asText();
 			System.out.println("Id: " + id);
 			
 			//poll the status
-			int statusInt = 0;
-			while (statusInt == 0) {
+			int status = 0;
+			while (status == 0) {
 				HttpGet httpGet = new HttpGet(SERVICE_URL + "/bulk/jobs/" + id + "?token=" + tokenString);
 				response = httpClient.execute(httpGet);
 				
@@ -163,10 +163,9 @@ public class CisTest {
 				
 				responseString = EntityUtils.toString(response.getEntity());
 				System.out.println("Jobs response: " + responseString);
-				JsonNode root2 = mapper.readValue(responseString, JsonNode.class);
-				String status = root2.get("status").asText();
+				JsonNode jobRoot = mapper.readValue(responseString, JsonNode.class);
+				status = jobRoot.get("status").asInt();
 				System.out.println("Status: " + status);
-				statusInt = Integer.valueOf(status);
 			}
 			
 			//getting the records
@@ -311,60 +310,6 @@ public class CisTest {
 			httpPost.releaseConnection();
 			httpClient.getConnectionManager().shutdown();
 		}
-		
-	}
-
-	// @Before
-	public void setup() throws ClientProtocolException, IOException {
-
-		// CredentialsProvider credsProvider = new BasicCredentialsProvider();
-		// credsProvider.setCredentials(
-		// new AuthScope("httpbin.org", 80),
-		// new UsernamePasswordCredentials("user", "passwd"));
-		// httpclient.setDefaultCredentialsProvider(credsProvider)
-		// .build();
-		DefaultHttpClient httpClient = new DefaultHttpClient();
-		HttpGet httpGet = null;
-		try {
-			// httpGet = new
-			// HttpGet("http://httpbin.org/basic-auth/user/passwd");
-			httpGet = new HttpGet("http://107.170.101.181:3000/api/login");
-
-			System.out.println("Executing request " + httpGet.getRequestLine());
-			HttpResponse response = httpClient.execute(httpGet);
-			// try {
-			System.out.println("----------------------------------------");
-			System.out.println(response.getStatusLine());
-			System.out.println(EntityUtils.toString(response.getEntity()));
-			
-			// } finally {
-			// response.close();
-			// }
-		} finally {
-			httpGet.releaseConnection();
-			httpClient.getConnectionManager().shutdown(); // Close the instance
-															// here
-		}
-		// httpclient.close();
-		// httpclient.
-		// }
-		/*
-		 * 
-		 * HttpClient httpclient = HttpCli HttpGet httpGet = new
-		 * HttpGet("http://targethost/homepage"); CloseableHttpResponse
-		 * response1 = httpclient.execute(httpGet); // The underlying HTTP
-		 * connection is still held by the response object // to allow the
-		 * response content to be streamed directly from the network socket. //
-		 * In order to ensure correct deallocation of system resources // the
-		 * user MUST call CloseableHttpResponse#close() from a finally clause.
-		 * // Please note that if response content is not fully consumed the
-		 * underlying // connection cannot be safely re-used and will be shut
-		 * down and discarded // by the connection manager. try {
-		 * System.out.println(response1.getStatusLine()); HttpEntity entity1 =
-		 * response1.getEntity(); // do something useful with the response body
-		 * // and ensure it is fully consumed EntityUtils.consume(entity1); }
-		 * finally { response1.close(); }
-		 */
 	}
 
 }

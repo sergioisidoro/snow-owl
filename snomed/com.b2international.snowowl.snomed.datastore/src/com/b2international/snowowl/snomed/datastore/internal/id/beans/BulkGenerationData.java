@@ -22,17 +22,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 
 /**
- *{
-  "namespace": 0,
-  "partitionId": "string",
-  "quantity": 0,
-  "systemIds": [
-    "string"
-  ],
-  "software": "string",
-  "comment": "string",
-  "generateLegacyIds": "false"
-  }
+ * 
+ * Bean to represent bulk id generation data used by IHTSDO's
+ * ID generation service.
+ * Instances of this class are meant to be serialized and deserialized
+ * to and from Json.
+ *  {
+ *	  "namespace": 0,
+ *	  "partitionId": "string",
+ *	  "quantity": 0,
+ *	  "systemIds": [
+ *	    "string"
+ * 	  ],
+ *	  "software": "string",
+ *	  "comment": "string",
+ *	  "generateLegacyIds": "false"
+ *	  }
  */
 public class BulkGenerationData extends CisRequestData {
 
