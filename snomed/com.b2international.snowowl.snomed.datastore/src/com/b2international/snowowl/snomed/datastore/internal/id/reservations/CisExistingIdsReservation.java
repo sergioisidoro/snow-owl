@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -78,12 +79,10 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		HttpGet httpGet = new HttpGet(serviceUrl + "/" + "sct/ids/" + componentId);
 
 		LOGGER.info("Is reserved? Request: {}.", httpGet.getRequestLine());
-		HttpResponse response;
 		try {
-			response = httpClient.execute(httpGet);
-			LOGGER.debug("Response: {}", response.getStatusLine());
 			
-			String responseString = EntityUtils.toString(response.getEntity());
+			String responseString = handleRestCall(httpGet);
+			
 			ObjectMapper mapper = new ObjectMapper();
 			SctId sctId = mapper.readValue(responseString, SctId.class);
 			return !sctId.getStatus().equals("Available");
@@ -112,16 +111,16 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		LOGGER.info("Create reservation, with name: {} for id {}.", NAME, sctId);
 		
 		try {
-		jsonTokenString = login();
-		String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
+			jsonTokenString = login();
+			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
 		
-		if (StringUtils.isEmpty(namespace)) {
-			String reservationDataString = getRegistrationtionDataString(sctId);
-			registerId(reservationDataString, tokenString);
-		} else {
-			String reservationDataString = getRegistrationtionDataString(sctId, namespace);
-			registerId(reservationDataString, tokenString);
-		}
+			if (StringUtils.isEmpty(namespace)) {
+				String reservationDataString = getRegistrationtionDataString(sctId);
+				registerId(reservationDataString, tokenString);
+			} else {
+				String reservationDataString = getRegistrationtionDataString(sctId, namespace);
+				registerId(reservationDataString, tokenString);
+			}
 		
 		} catch (IOException e) {
 			throw new IdGeneratorException("Exception when trying to register SNOMED CT id + " + sctId, e);
@@ -148,17 +147,17 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		LOGGER.info("Create reservation, with name: {} for id {}.", NAME, sctId);
 		
 		try {
-		jsonTokenString = login();
-		String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
-		
-		if (StringUtils.isEmpty(namespace)) {
-			String releaseData = getReleaseOrPublishDataString(sctId);
-			releaseId(releaseData, tokenString);
-		} else {
-			String releaseData = getReleaseOrPublishDataString(sctId, namespace);
-			releaseId(releaseData, tokenString);
-		}
-		
+			jsonTokenString = login();
+			String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
+			
+			if (StringUtils.isEmpty(namespace)) {
+				String releaseData = getReleaseOrPublishDataString(sctId);
+				releaseId(releaseData, tokenString);
+			} else {
+				String releaseData = getReleaseOrPublishDataString(sctId, namespace);
+				releaseId(releaseData, tokenString);
+			}
+			
 		} catch (IOException e) {
 			throw new IdGeneratorException("Exception when trying to register SNOMED CT id + " + sctId, e);
 		} finally {
@@ -188,12 +187,10 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// create the job
 			httpPost = new HttpPost(serviceUrl + "/sct/bulk/register?token=" + tokenString);
-			httpPost.setEntity(new StringEntity(bulkRegisterDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPost);
-
-			LOGGER.info("Bulk register job response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			LOGGER.info("Register: {}.", httpPost.getRequestLine());
+			String responseString = handleRestCall(bulkRegisterDataString, httpPost);
+			
+			
 			JsonNode root = mapper.readValue(responseString, JsonNode.class);
 			String id = root.get(JSON_JOB_ID_KEY).asText();
 			LOGGER.info("Register job id: {}.", id);
@@ -203,13 +200,8 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// getting the records
 			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
-			response = httpClient.execute(httpGet);
-
-			LOGGER.debug("Bulk publication record retrival response: {}", response.getStatusLine());
-
-			responseString = EntityUtils.toString(response.getEntity());
-			LOGGER.debug("Records response: {}.", responseString);
-		} catch (Exception e) {
+			handleRestCall(httpGet);
+		} catch (IOException | InterruptedException e) {
 			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			// try to log out if we logged in
@@ -248,12 +240,9 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// create the job
 			httpPut = new HttpPut(serviceUrl + "/sct/bulk/release?token=" + tokenString);
-			httpPut.setEntity(new StringEntity(bulkReleaseDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPut);
-
-			LOGGER.info("Bulk release job response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			LOGGER.info("Register: {}.", httpPut.getRequestLine());
+			String responseString = handleRestCall(bulkReleaseDataString, httpPut);
+			
 			JsonNode root = mapper.readValue(responseString, JsonNode.class);
 			String id = root.get(JSON_JOB_ID_KEY).asText();
 			LOGGER.info("Register job id: {}.", id);
@@ -263,13 +252,9 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// getting the records
 			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
-			response = httpClient.execute(httpGet);
-
-			LOGGER.debug("Bulk release record retrival response: {}", response.getStatusLine());
-
-			responseString = EntityUtils.toString(response.getEntity());
-			LOGGER.debug("Records response: {}.", responseString);
-		} catch (Exception e) {
+			
+			handleRestCall(httpGet);
+		} catch (IOException | InterruptedException e) {
 			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			// try to log out if we logged in
@@ -344,12 +329,9 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// create the job
 			httpPut = new HttpPut(serviceUrl + "/sct/bulk/publish?token=" + tokenString);
-			httpPut.setEntity(new StringEntity(generationDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPut);
-
-			LOGGER.info("Bulk publish job response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			
+			String responseString = handleRestCall(generationDataString, httpPut);
+			
 			JsonNode root = mapper.readValue(responseString, JsonNode.class);
 			String id = root.get(JSON_JOB_ID_KEY).asText();
 			LOGGER.info("Job id: {}.", id);
@@ -359,13 +341,8 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 
 			// getting the records
 			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
-			response = httpClient.execute(httpGet);
-
-			LOGGER.debug("Bulk publication record retrival response: {}", response.getStatusLine());
-
-			responseString = EntityUtils.toString(response.getEntity());
-			LOGGER.debug("Records response: {}.", responseString);
-		} catch (Exception e) {
+			handleRestCall(httpGet);
+		} catch (IOException | InterruptedException e) {
 			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			// try to log out if we logged in
@@ -393,12 +370,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		LOGGER.info("Registering an id with CIS. Request: {}", httpPost.getRequestLine());
 
 		try {
-			httpPost.setEntity(new StringEntity(reservationDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPost);
-
-			LOGGER.debug("Response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			String responseString = handleRestCall(reservationDataString, httpPost);
 			String sctId = mapper.readValue(responseString, SctId.class).getSctid();
 
 			LOGGER.debug("Registered concept, id: {} ", sctId);
@@ -419,12 +391,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		LOGGER.info("Releasing an id from CIS. Request: {}", httpPut.getRequestLine());
 
 		try {
-			httpPut.setEntity(new StringEntity(releaseDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPut);
-
-			LOGGER.debug("Response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			String responseString = handleRestCall(releaseDataString, httpPut);
 			String sctId = mapper.readValue(responseString, SctId.class).getSctid();
 
 			LOGGER.debug("Released concept, id: {} ", sctId);
@@ -445,12 +412,8 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 		LOGGER.info("Publishing an id within CIS. Request: {}", httpPut.getRequestLine());
 
 		try {
-			httpPut.setEntity(new StringEntity(publishDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPut);
-
-			LOGGER.debug("Response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			String responseString = handleRestCall(publishDataString, httpPut);
+			
 			String sctId = mapper.readValue(responseString, SctId.class).getSctid();
 
 			LOGGER.debug("Published concept, id: {} ", sctId);
@@ -462,7 +425,7 @@ public class CisExistingIdsReservation extends CisService implements DynamicRese
 			httpClient.getConnectionManager().shutdown();
 		}
 	}
-	
+
 	/*
 	 * JSON body data for extension id registration
 	 * @return JSON string

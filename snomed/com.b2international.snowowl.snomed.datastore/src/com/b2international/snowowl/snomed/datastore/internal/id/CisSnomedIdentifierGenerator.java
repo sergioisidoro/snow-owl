@@ -18,12 +18,8 @@ package com.b2international.snowowl.snomed.datastore.internal.id;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,12 +119,8 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 			httpPost = new HttpPost(serviceUrl + "/" + "sct/generate?token=" + tokenString);
 			LOGGER.info("Retrieving a generated id. Request: {}", httpPost.getRequestLine());
 
-			//try {
-			httpPost.setEntity(new StringEntity(dataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPost);
-			LOGGER.debug("Response: {}", response.getStatusLine());
+			String responseString = handleRestCall(dataString, httpPost);
 			
-			String responseString = EntityUtils.toString(response.getEntity());
 			String sctId = mapper.readValue(responseString, SctId.class).getSctid();
 
 			LOGGER.info("Generated concept id: {} ", sctId);
@@ -181,12 +173,9 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 
 			// create the job
 			httpPost = new HttpPost(serviceUrl + "/sct/bulk/generate?token=" + tokenString);
-			httpPost.setEntity(new StringEntity(generationDataString, ContentType.create("application/json")));
-			HttpResponse response = httpClient.execute(httpPost);
-
-			LOGGER.debug("Bulk generation job creation response: {}", response.getStatusLine());
-
-			String responseString = EntityUtils.toString(response.getEntity());
+			
+			String responseString = handleRestCall(generationDataString, httpPost);
+			
 			JsonNode root = mapper.readValue(responseString, JsonNode.class);
 			String id = root.get(JSON_JOB_ID_KEY).asText();
 			LOGGER.debug("Job id: {}.", id);
@@ -196,12 +185,8 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 
 			// getting the records
 			httpGet = new HttpGet(serviceUrl + "/bulk/jobs/" + id + "/records?token=" + tokenString);
-			response = httpClient.execute(httpGet);
-
-			LOGGER.debug("Bulk generation record retrival response: {}", response.getStatusLine());
-
-			responseString = EntityUtils.toString(response.getEntity());
-			LOGGER.debug("Records response: {}.", responseString);
+			responseString = handleRestCall(httpGet);
+			
 			IdRecord[] idRecords = mapper.readValue(responseString, IdRecord[].class);
 			Collection<String> sctIds = Collections2.transform(Lists.newArrayList(idRecords), new Function<IdRecord, String>() {
 				@Override
@@ -210,7 +195,7 @@ public class CisSnomedIdentifierGenerator extends CisService implements ISnomedI
 				}
 			});
 			return sctIds;
-		} catch (Exception e) {
+		} catch (IOException | InterruptedException e) {
 			throw new IdGeneratorException("Exception when calling the external id generator service.", e);
 		} finally {
 			// try to log out if we logged in

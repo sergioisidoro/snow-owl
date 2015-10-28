@@ -52,9 +52,6 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
-	private SnowOwlConfiguration snowOwlConfiguration = SnowOwlApplication.INSTANCE.getConfiguration();
-	private SnomedCoreConfiguration coreConfiguration = snowOwlConfiguration.getModuleConfig(SnomedCoreConfiguration.class);
-	
 	@Override
 	public String getHelp() {
 		StringBuffer buffer = new StringBuffer();
@@ -128,6 +125,9 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 	 */
 	protected String login(String serviceUrl, CommandInterpreter ci) {
 
+		SnowOwlConfiguration snowOwlConfiguration = SnowOwlApplication.INSTANCE.getConfiguration();
+		SnomedCoreConfiguration coreConfiguration = snowOwlConfiguration.getModuleConfig(SnomedCoreConfiguration.class);
+		
 		String userName = coreConfiguration.getExternalIdGeneratorUserName();
 		String password = coreConfiguration.getExternalIdGeneratorPassword();
 
@@ -161,6 +161,9 @@ public class SnomedDatastoreCommandProvider implements CommandProvider {
 	 * @throws JsonParseException 
 	 */
 	protected void stats(String serviceUrl, String jsonTokenString, CommandInterpreter ci) throws JsonParseException, JsonMappingException, IOException {
+		
+		SnowOwlConfiguration snowOwlConfiguration = SnowOwlApplication.INSTANCE.getConfiguration();
+		SnomedCoreConfiguration coreConfiguration = snowOwlConfiguration.getModuleConfig(SnomedCoreConfiguration.class);
 		
 		String tokenString = mapper.readValue(jsonTokenString, Token.class).getToken();
 		HttpGet httpGet = new HttpGet(serviceUrl + "/" + "stats?token=" + tokenString + "&username=" + coreConfiguration.getExternalIdGeneratorUserName());

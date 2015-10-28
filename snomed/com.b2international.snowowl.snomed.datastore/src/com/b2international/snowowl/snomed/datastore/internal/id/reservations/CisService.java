@@ -21,8 +21,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -108,8 +110,14 @@ public class CisService {
 
 			LOGGER.debug("Response: {}", response.getStatusLine());
 
-			String jsonTokenString = EntityUtils.toString(response.getEntity());
-			return jsonTokenString;
+			String responseString = EntityUtils.toString(response.getEntity());
+			
+			//wrap the returned body as an exception
+			if (response.getStatusLine().getStatusCode() != 200) {
+				throw new IdGeneratorException(responseString);
+			}
+			
+			return responseString;
 		} catch (IOException e) {
 			throw new IdGeneratorException(e);
 		} finally {
@@ -132,6 +140,13 @@ public class CisService {
 		try {
 			response = httpClient.execute(httpPost);
 			LOGGER.debug("Response: {}", response.getStatusLine());
+			String responseString = EntityUtils.toString(response.getEntity());
+			
+			//wrap the returned body as an exception
+			if (response.getStatusLine().getStatusCode() != 200) {
+				throw new IdGeneratorException(responseString);
+			}
+			
 		} catch (ClientProtocolException e) {
 			throw new IdGeneratorException(e);
 		} catch (IOException e) {
@@ -141,7 +156,50 @@ public class CisService {
 			httpPost.releaseConnection();
 			httpClient.getConnectionManager().shutdown();
 		}
+	}
+	
+	/**
+	 * Executes a REST call and handles the response
+	 * @param httpRequestBase
+	 * @return reponse string
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 */
+	protected String handleRestCall(HttpRequestBase httpRequestBase) throws IOException {
+		HttpResponse response = httpClient.execute(httpRequestBase);
 
+		LOGGER.info("Response: {}", response);
+
+		String responseString = EntityUtils.toString(response.getEntity());
+		
+		//wrap the returned body as an exception
+		if (response.getStatusLine().getStatusCode() != 200) {
+			throw new IdGeneratorException(responseString);
+		}
+		return responseString;
+	}
+	
+	/**
+	 * Executes a REST call and handles the response
+	 * @param dataString
+	 * @param httpEntityEnclosingRequestBase
+	 * @return response string
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 */
+	protected String handleRestCall(String dataString, HttpEntityEnclosingRequestBase httpEntityEnclosingRequestBase) throws IOException {
+		httpEntityEnclosingRequestBase.setEntity(new StringEntity(dataString, ContentType.create("application/json")));
+		HttpResponse response = httpClient.execute(httpEntityEnclosingRequestBase);
+
+		LOGGER.info("Response: '{}' for request body '{}'.", response, dataString);
+
+		String responseString = EntityUtils.toString(response.getEntity());
+		
+		//wrap the returned body as an exception
+		if (response.getStatusLine().getStatusCode() != 200) {
+			throw new IdGeneratorException(responseString);
+		}
+		return responseString;
 	}
 	
 	/**
@@ -169,6 +227,12 @@ public class CisService {
 			LOGGER.debug("Job polling request response: {}", response.getStatusLine());
 
 			String responseString = EntityUtils.toString(response.getEntity());
+			
+			//wrap the returned body as an exception
+			if (response.getStatusLine().getStatusCode() != 200) {
+				throw new IdGeneratorException(responseString);
+			}
+			
 			LOGGER.debug("Jobs response: " + responseString);
 			JsonNode root = mapper.readValue(responseString, JsonNode.class);
 			status = root.get(JSON_JOB_STATUS_KEY).asInt();

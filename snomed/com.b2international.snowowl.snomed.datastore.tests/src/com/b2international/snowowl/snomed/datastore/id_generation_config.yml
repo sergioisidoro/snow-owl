@@ -27,6 +27,7 @@ snomed:
   externalIdGeneratorContextRoot : api
   externalIdGeneratorUserName : snowowl-dev-b2i
   externalIdGeneratorPassword : hAAYLYMX5gc98SDEz9cr
+  externalIdGeneratorClientSoftwareKey : Snow Owl dev. tests
   
 
 repository:
