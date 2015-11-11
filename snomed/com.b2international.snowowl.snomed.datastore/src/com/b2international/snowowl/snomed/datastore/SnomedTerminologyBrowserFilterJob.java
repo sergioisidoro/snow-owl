@@ -17,6 +17,7 @@ package com.b2international.snowowl.snomed.datastore;
 
 import com.b2international.snowowl.datastore.TerminologyBrowserFilterJob;
 import com.b2international.snowowl.snomed.common.SnomedTerminologyComponentConstants;
+import com.b2international.snowowl.snomed.datastore.index.entry.SnomedConceptIndexEntry;
 
 /**
  * Job for creating a SNOMED&nbsp;CT concept hierarchy browser based on a subset of concepts.
