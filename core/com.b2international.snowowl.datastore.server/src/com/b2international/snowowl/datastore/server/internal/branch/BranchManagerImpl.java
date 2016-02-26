@@ -28,6 +28,7 @@ import com.b2international.snowowl.core.exceptions.NotFoundException;
 import com.b2international.snowowl.datastore.store.Store;
 import com.b2international.snowowl.datastore.store.query.Query;
 import com.b2international.snowowl.datastore.store.query.QueryBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
@@ -106,10 +107,10 @@ public abstract class BranchManagerImpl implements BranchManager {
 	}
 
 	@Override
-	public Collection<? extends Branch> getBranches() {
+	public Collection<Branch> getBranches() {
 		final Collection<InternalBranch> values = branchStore.values();
 		initialize(values);
-		return values;
+		return ImmutableList.copyOf(values);
 	}
 
 	private void initialize(final Collection<InternalBranch> values) {
@@ -167,9 +168,9 @@ public abstract class BranchManagerImpl implements BranchManager {
 		return branch;
 	}
 
-	/*package*/ final Collection<? extends Branch> getChildren(BranchImpl branchImpl) {
+	/*package*/ final Collection<Branch> getChildren(BranchImpl branchImpl) {
 		final Collection<InternalBranch> values = branchStore.search(QueryBuilder.newQuery().prefixMatch(PATH_FIELD, branchImpl.path() + Branch.SEPARATOR).build());
 		initialize(values);
-		return values;
+		return ImmutableList.copyOf(values);
 	}
 }
