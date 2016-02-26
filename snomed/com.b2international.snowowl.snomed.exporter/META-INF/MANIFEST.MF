@@ -8,7 +8,7 @@ Bundle-Vendor: B2i Healthcare
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.8.0,3.9.0)",
  org.eclipse.net4j;bundle-version="[4.1.1,4.1.2)",
  com.b2international.snowowl.snomed.datastore
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: com.b2international.snowowl.snomed.exporter.model,com.
  b2international.snowowl.snomed.exporter.service

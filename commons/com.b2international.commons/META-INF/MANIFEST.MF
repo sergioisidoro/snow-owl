@@ -4,7 +4,7 @@ Bundle-Name: B2i Commons
 Bundle-SymbolicName: com.b2international.commons
 Bundle-Version: 4.6.0.qualifier
 Bundle-Vendor: B2i Healthcare
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: bak.pcj,
  bak.pcj.adapter,
  bak.pcj.hash,
