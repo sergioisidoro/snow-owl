@@ -166,14 +166,14 @@ public abstract class AbstractTerminologyExcelImportJob<T extends CDOObject> ext
 			}
 
 			final long lastCommitTime = getLastCommitTimeBeforeImport();
-			latestSuccessfulCommitTime = lastCommitTime;
+			setLatestSuccessfulCommitTime(lastCommitTime);
 
 			for (final Sheet sheet : sheets) {
 				final String terminologyName = importTerminology(sheet.getSheetName());
 				logImportActivity(MessageFormat.format("Processed excel sheet {0} for {1}", sheet.getSheetName(), getTerminologyName()));
 				final CDOCommitInfo commitInfo = commitChanges(terminologyName, fileName);
 				if (null != commitInfo) {
-					latestSuccessfulCommitTime = commitInfo.getTimeStamp();
+					setLatestSuccessfulCommitTime(commitInfo.getTimeStamp());
 				}
 			}
 
@@ -257,6 +257,10 @@ public abstract class AbstractTerminologyExcelImportJob<T extends CDOObject> ext
 		return latestSuccessfulCommitTime;
 	}
 
+	protected void setLatestSuccessfulCommitTime(long timestamp) {
+		latestSuccessfulCommitTime = timestamp;
+	}
+	
 	protected boolean getStatusBooleanValue(final String value, boolean defaultValue) {
 		if (StringUtils.isEmpty(value)) {
 			return defaultValue;
