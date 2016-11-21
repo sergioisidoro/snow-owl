@@ -19,8 +19,9 @@ import java.util.Map;
 
 import com.b2international.snowowl.core.exceptions.ApiError;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * {@link RestApiError} represents a generic multi purpose user AND developer friendly error/exception representation, which should be used in all

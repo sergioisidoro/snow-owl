@@ -47,13 +47,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.module.scala.DefaultScalaModule;
-import com.mangofactory.swagger.configuration.SpringSwaggerConfig;
-import com.mangofactory.swagger.models.alternates.AlternateTypeRule;
-import com.mangofactory.swagger.paths.RelativeSwaggerPathProvider;
-import com.mangofactory.swagger.plugin.EnableSwagger;
-import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
-import com.wordnik.swagger.model.ApiInfo;
+
+import springfox.documentation.schema.AlternateTypeRule;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.paths.RelativePathProvider;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  * The Spring configuration class for Snow Owl's internal REST services module.
@@ -61,11 +62,10 @@ import com.wordnik.swagger.model.ApiInfo;
  * @since 1.0
  */
 @Configuration
-@EnableSwagger
+@EnableSwagger2
 @EnableWebMvc
 public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 
-	private SpringSwaggerConfig springSwaggerConfig;
 	private ServletContext servletContext;
 
 	private String apiVersion;
@@ -76,15 +76,10 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	private String apiContact;
 	private String apiLicense;
 	private String apiLicenseUrl;
-	
+
 	@Autowired
 	public void setServletContext(final ServletContext servletContext) {
 		this.servletContext = servletContext;
-	}
-
-	@Autowired
-	public void setSpringSwaggerConfig(final SpringSwaggerConfig springSwaggerConfig) {
-		this.springSwaggerConfig = springSwaggerConfig;
 	}
 
 	@Autowired
@@ -128,32 +123,33 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	public void setApiLicenseUrl(final String apiLicenseUrl) {
 		this.apiLicenseUrl = apiLicenseUrl;
 	}
-	
+
 	@Bean
 	public IEventBus eventBus() {
 		return com.b2international.snowowl.core.ApplicationContext.getInstance().getServiceChecked(IEventBus.class);
 	}
 
 	@Bean
-	public SwaggerSpringMvcPlugin swaggerSpringMvcPlugin() {
-		final SwaggerSpringMvcPlugin swaggerSpringMvcPlugin = new SwaggerSpringMvcPlugin(springSwaggerConfig);
-		swaggerSpringMvcPlugin.apiInfo(new ApiInfo(apiTitle, apiDescription, apiTermsOfServiceUrl, apiContact, apiLicense, apiLicenseUrl));
-		swaggerSpringMvcPlugin.apiVersion(apiVersion);
-		swaggerSpringMvcPlugin.pathProvider(new RelativeSwaggerPathProvider(servletContext));
-		swaggerSpringMvcPlugin.useDefaultResponseMessages(false);
-		swaggerSpringMvcPlugin.ignoredParameterTypes(Principal.class, Void.class);
+	public Docket swaggerSpringMvcPlugin() {
 		final TypeResolver resolver = new TypeResolver();
-		swaggerSpringMvcPlugin.genericModelSubstitutes(ResponseEntity.class);
-		swaggerSpringMvcPlugin.alternateTypeRules(new AlternateTypeRule(resolver.resolve(UUID.class), resolver.resolve(String.class)));
+		return new Docket(DocumentationType.SWAGGER_2)
+            .apiInfo(apiInfo())
+            .pathProvider(new RelativePathProvider(servletContext))
+            .useDefaultResponseMessages(false)
+            .ignoredParameterTypes(Principal.class, Void.class)
+            .genericModelSubstitutes(ResponseEntity.class)
+            .alternateTypeRules(new AlternateTypeRule(resolver.resolve(UUID.class), resolver.resolve(String.class)));
+	}
 
-		return swaggerSpringMvcPlugin;
+	private ApiInfo apiInfo() {
+		final Contact contact = new Contact("B2i Healthcare", "http://b2i.sg", apiContact);
+		return new ApiInfo(apiTitle, apiDescription, apiVersion, apiTermsOfServiceUrl, contact, apiLicense, apiLicenseUrl);
 	}
 
 	@Bean
 	public ObjectMapper objectMapper() {
 		final ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.setVisibility(PropertyAccessor.CREATOR, Visibility.ANY);
-		objectMapper.registerModule(new DefaultScalaModule());
 		objectMapper.registerModule(new GuavaModule());
 		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
 		final ISO8601DateFormat df = new ISO8601DateFormat();

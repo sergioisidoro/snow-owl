@@ -28,15 +28,16 @@ import com.b2international.snowowl.core.history.domain.IHistoryInfo;
 import com.b2international.snowowl.snomed.api.ISnomedReferenceSetHistoryService;
 import com.b2international.snowowl.snomed.api.rest.domain.RestApiError;
 import com.b2international.snowowl.snomed.api.rest.domain.SnomedReferenceSetHistory;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * @since 1.0
  */
-@Api("History")
+@Api(tags="history", description="History")
 @RestController
 @RequestMapping(produces={ AbstractRestService.SO_MEDIA_TYPE })
 public class SnomedReferenceSetHistoryRestService extends AbstractSnomedRestService {

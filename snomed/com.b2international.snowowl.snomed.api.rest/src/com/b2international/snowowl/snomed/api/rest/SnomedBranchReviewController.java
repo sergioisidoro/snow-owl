@@ -42,17 +42,18 @@ import com.b2international.snowowl.snomed.api.rest.domain.RestApiError;
 import com.b2international.snowowl.snomed.api.rest.util.DeferredResults;
 import com.b2international.snowowl.snomed.api.rest.util.Responses;
 import com.b2international.snowowl.snomed.datastore.request.SnomedRequests;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * Provides REST endpoints for computing Reviewerences between branches.
  * 
  * @since 4.2
  */
-@Api("Branches")
+@Api(tags="branches", description="Branches")
 @RestController
 @RequestMapping(value="/reviews", produces={AbstractRestService.SO_MEDIA_TYPE, MediaType.APPLICATION_JSON_VALUE})
 public class SnomedBranchReviewController extends AbstractRestService {

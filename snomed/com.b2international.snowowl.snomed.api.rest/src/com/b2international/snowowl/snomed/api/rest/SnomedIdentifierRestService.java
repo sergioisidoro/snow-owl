@@ -32,16 +32,17 @@ import com.b2international.snowowl.snomed.api.rest.domain.SnomedIdentifierRespon
 import com.b2international.snowowl.snomed.api.rest.util.DeferredResults;
 import com.b2international.snowowl.snomed.core.events.SnomedIdentifierGenerateRequestBuilder;
 import com.google.common.base.Function;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 
 /**
  * @since 1.0
  */
-@Api("Identifiers")
+@Api(tags="identifiers", description="Identifiers")
 @RestController
 @RequestMapping(value="/ids", produces = { AbstractRestService.SO_MEDIA_TYPE })
 public class SnomedIdentifierRestService extends AbstractRestService {

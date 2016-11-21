@@ -18,6 +18,7 @@ package com.b2international.snowowl.snomed.api.rest;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -67,16 +68,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
-import com.mangofactory.swagger.configuration.SpringSwaggerConfig;
-import com.mangofactory.swagger.models.alternates.AlternateTypeRule;
-import com.mangofactory.swagger.paths.RelativeSwaggerPathProvider;
-import com.mangofactory.swagger.plugin.EnableSwagger;
-import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
-import com.wordnik.swagger.model.ApiInfo;
+
+import springfox.documentation.schema.AlternateTypeRule;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.ApiListing;
+import springfox.documentation.service.ApiListingReference;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.paths.RelativePathProvider;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  * The Spring configuration class for Snow Owl's internal REST services module.
@@ -84,11 +89,10 @@ import com.wordnik.swagger.model.ApiInfo;
  * @since 1.0
  */
 @Configuration
-@EnableSwagger
+@EnableSwagger2
 @EnableWebMvc
 public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 
-	private SpringSwaggerConfig springSwaggerConfig;
 	private ServletContext servletContext;
 
 	private String apiVersion;
@@ -102,11 +106,6 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	@Autowired
 	public void setServletContext(final ServletContext servletContext) {
 		this.servletContext = servletContext;
-	}
-
-	@Autowired
-	public void setSpringSwaggerConfig(final SpringSwaggerConfig springSwaggerConfig) {
-		this.springSwaggerConfig = springSwaggerConfig;
 	}
 
 	@Autowired
@@ -146,20 +145,29 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
-	public SwaggerSpringMvcPlugin swaggerSpringMvcPlugin() {
-		final SwaggerSpringMvcPlugin swaggerSpringMvcPlugin = new SwaggerSpringMvcPlugin(springSwaggerConfig);
-		swaggerSpringMvcPlugin.apiInfo(new ApiInfo(apiTitle, readApiDescription(), apiTermsOfServiceUrl, apiContact, apiLicense, apiLicenseUrl));
-		swaggerSpringMvcPlugin.apiVersion(apiVersion);
-		swaggerSpringMvcPlugin.pathProvider(new RelativeSwaggerPathProvider(servletContext));
-		swaggerSpringMvcPlugin.useDefaultResponseMessages(false);
-		swaggerSpringMvcPlugin.ignoredParameterTypes(Principal.class, Void.class);
+	public Docket swaggerSpringMvcPlugin() {
 		final TypeResolver resolver = new TypeResolver();
-		swaggerSpringMvcPlugin.genericModelSubstitutes(ResponseEntity.class);
-		swaggerSpringMvcPlugin.genericModelSubstitutes(DeferredResult.class);
-		swaggerSpringMvcPlugin.alternateTypeRules(new AlternateTypeRule(resolver.resolve(UUID.class), resolver.resolve(String.class)));
-		swaggerSpringMvcPlugin.directModelSubstitute(Branch.class, BranchMixin.class);
-
-		return swaggerSpringMvcPlugin;
+		return new Docket(DocumentationType.SWAGGER_2)
+				// sort the api endpoints by their description
+				.apiListingReferenceOrdering(Ordering.from(new Comparator<ApiListingReference>() {
+					@Override
+					public int compare(ApiListingReference o1, ApiListingReference o2) {
+						return o1.getDescription().compareTo(o2.getDescription());
+					}
+				}))
+	            .apiInfo(apiInfo())
+	            .pathProvider(new RelativePathProvider(servletContext))
+	            .useDefaultResponseMessages(false)
+	            .ignoredParameterTypes(Principal.class, Void.class)
+	            .genericModelSubstitutes(ResponseEntity.class)
+	            .genericModelSubstitutes(DeferredResult.class)
+	            .alternateTypeRules(new AlternateTypeRule(resolver.resolve(UUID.class), resolver.resolve(String.class)))
+	            .directModelSubstitute(Branch.class, BranchMixin.class);
+	}
+	
+	private ApiInfo apiInfo() {
+		final Contact contact = new Contact("B2i Healthcare", "http://b2i.sg", apiContact);
+		return new ApiInfo(apiTitle, "TODO", apiVersion, apiTermsOfServiceUrl, contact, apiLicense, apiLicenseUrl);
 	}
 
 	private String readApiDescription() {
@@ -174,7 +182,6 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	@Bean
 	public ObjectMapper objectMapper() {
 		final ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new DefaultScalaModule());
 		objectMapper.registerModule(new GuavaModule());
 		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
 		final ISO8601DateFormat df = new ISO8601DateFormat();

@@ -56,16 +56,17 @@ import com.b2international.snowowl.snomed.api.rest.util.Responses;
 import com.b2international.snowowl.snomed.core.domain.Rf2ReleaseType;
 import com.google.common.base.Strings;
 import com.google.common.collect.MapMaker;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * @since 1.0
  */
-@Api("Exports")
+@Api(tags="exports", description="Exports")
 @RestController
 @RequestMapping(
 		value="/exports", produces = { AbstractRestService.SO_MEDIA_TYPE })
