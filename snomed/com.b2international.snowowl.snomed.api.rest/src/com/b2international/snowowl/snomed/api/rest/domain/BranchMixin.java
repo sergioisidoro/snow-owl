@@ -19,9 +19,12 @@ import com.b2international.snowowl.core.MetadataHolderMixin;
 import com.b2international.snowowl.core.branch.Branch;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.annotations.ApiModel;
+
 /**
  * @since 4.1
  */
+@ApiModel("Branch")
 public interface BranchMixin extends MetadataHolderMixin {
 
 	@JsonProperty

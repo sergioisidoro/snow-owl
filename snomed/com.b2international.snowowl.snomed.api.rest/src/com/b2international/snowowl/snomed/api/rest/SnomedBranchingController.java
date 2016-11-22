@@ -33,7 +33,6 @@ import org.springframework.web.context.request.async.DeferredResult;
 
 import com.b2international.snowowl.core.branch.Branch;
 import com.b2international.snowowl.core.branch.Branches;
-import com.b2international.snowowl.core.domain.CollectionResource;
 import com.b2international.snowowl.core.exceptions.ApiValidation;
 import com.b2international.snowowl.eventbus.IEventBus;
 import com.b2international.snowowl.snomed.api.rest.domain.BranchUpdateRestRequest;
@@ -85,9 +84,6 @@ public class SnomedBranchingController extends AbstractRestService {
 	@ApiOperation(
 		value = "Retrieve all branches", 
 		notes = "Returns all SNOMED-CT branches from the repository.")
-	@ApiResponses({
-		@ApiResponse(code = 200, message = "OK", response=CollectionResource.class)
-	})
 	@RequestMapping(method=RequestMethod.GET)
 	public DeferredResult<Branches> getBranches() {
 		return DeferredResults.wrap(
@@ -102,7 +98,7 @@ public class SnomedBranchingController extends AbstractRestService {
 		value = "Retrieve children of a single branch", 
 		notes = "Returns the children of a single SNOMED-CT branch (both direct and transitive).")
 	@ApiResponses({
-		@ApiResponse(code = 200, message = "OK", response=CollectionResource.class),
+		@ApiResponse(code = 200, message = "OK"),
 		@ApiResponse(code = 404, message = "Not Found", response=RestApiError.class),
 	})
 	@RequestMapping(value="/{path:**}/children", method=RequestMethod.GET)
@@ -140,11 +136,10 @@ public class SnomedBranchingController extends AbstractRestService {
 				+ "The API will return <strong>HTTP 400</strong> responses, if clients send requests to <strong>deleted</strong> branches."
 				+ "</p>")
 	@ApiResponses({
-		@ApiResponse(code = 200, message = "OK"),
 		@ApiResponse(code = 404, message = "Not Found", response=RestApiError.class),
 	})
-	@RequestMapping(value="/{path:**}", method=RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@RequestMapping(value="/{path:**}", method=RequestMethod.DELETE)
 	public DeferredResult<ResponseEntity<Void>> deleteBranch(@PathVariable("path") String branchPath) {
 		return DeferredResults.wrap(
 				SnomedRequests
@@ -162,7 +157,6 @@ public class SnomedBranchingController extends AbstractRestService {
 					+ "The endpoint allows clients to update any metadata properties, other properties are immutable."
 					+ "</p>")
 	@ApiResponses({
-		@ApiResponse(code = 204, message = "No Content"),
 		@ApiResponse(code = 404, message = "Not Found", response=RestApiError.class),
 	})
 	@RequestMapping(value="/{path:**}", method=RequestMethod.PUT)

@@ -95,7 +95,7 @@ public class SnomedBranchReviewController extends AbstractRestService {
 			notes = "Retrieves an existing terminology review with the specified identifier, if it exists.")
 	@ApiResponses({
 		@ApiResponse(code = 200, message = "OK"),
-		@ApiResponse(code = 404, message = "Review not found", response=RestApiError.class),
+		@ApiResponse(code = 404, message = "Not found", response=RestApiError.class),
 	})
 	@RequestMapping(value="/{id}", method=RequestMethod.GET)
 	public DeferredResult<Review> getReview(@PathVariable("id") final String reviewId) {
@@ -111,7 +111,7 @@ public class SnomedBranchReviewController extends AbstractRestService {
 			notes = "Retrieves the set of created, changed and detached concepts for an existing review with the specified identifier, if it exists.")
 	@ApiResponses({
 		@ApiResponse(code = 200, message = "OK"),
-		@ApiResponse(code = 404, message = "Review not found or changes are not yet available", response=RestApiError.class),
+		@ApiResponse(code = 404, message = "Not found or changes are not yet available", response=RestApiError.class),
 	})
 	@RequestMapping(value="/{id}/concept-changes", method=RequestMethod.GET)
 	public DeferredResult<ConceptChanges> getConceptChanges(@PathVariable("id") final String reviewId) {
@@ -127,11 +127,10 @@ public class SnomedBranchReviewController extends AbstractRestService {
 			value = "Delete single review", 
 			notes = "Deletes a review run along with its computed change set, if any of them exist.")
 	@ApiResponses({
-		@ApiResponse(code = 200, message = "OK"),
-		@ApiResponse(code = 404, message = "Review not found", response=RestApiError.class),
+		@ApiResponse(code = 404, message = "Not found", response=RestApiError.class),
 	})
-	@RequestMapping(value="/{id}", method=RequestMethod.DELETE)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@RequestMapping(value="/{id}", method=RequestMethod.DELETE)
 	public DeferredResult<ResponseEntity<Void>> deleteReview(@PathVariable("id") final String reviewId) {
 		return DeferredResults.wrap(
 				SnomedRequests

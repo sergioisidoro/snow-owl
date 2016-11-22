@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -67,16 +69,17 @@ public class SnomedBranchMergingController extends AbstractRestService {
 			@ApiResponse(code = 400, message = "Bad request", response=RestApiError.class),
 			@ApiResponse(code = 404, message = "Source or Target branch was not found", response=RestApiError.class)
 		})
+	@ResponseStatus(HttpStatus.ACCEPTED)
 	@RequestMapping(method = RequestMethod.POST, consumes={AbstractRestService.SO_MEDIA_TYPE, MediaType.APPLICATION_JSON_VALUE})
-	public ResponseEntity<Void> createMerge(@RequestBody MergeRestRequest restRequest) {
-		ApiValidation.checkInput(restRequest);
+	public ResponseEntity<Void> createMerge(@RequestBody MergeRestRequest request) {
+		ApiValidation.checkInput(request);
 		
 		final Merge merge = SnomedRequests.merging()
 			.prepareCreate()
-			.setSource(restRequest.getSource())
-			.setTarget(restRequest.getTarget())
-			.setReviewId(restRequest.getReviewId())
-			.setCommitComment(restRequest.getCommitComment())
+			.setSource(request.getSource())
+			.setTarget(request.getTarget())
+			.setReviewId(request.getReviewId())
+			.setCommitComment(request.getCommitComment())
 			.build(repositoryId)
 			.execute(bus)
 			.getSync();
@@ -135,6 +138,7 @@ public class SnomedBranchMergingController extends AbstractRestService {
 		@ApiResponse(code = 204, message = "No content, delete successful"),
 		@ApiResponse(code = 404, message = "Merge request not found in queue", response=RestApiError.class)
 	})
+	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequestMapping(method=RequestMethod.DELETE, value="/{id}")
 	public DeferredResult<ResponseEntity<Void>> deleteMerge(@PathVariable("id") UUID id) {
 		return DeferredResults.wrap(

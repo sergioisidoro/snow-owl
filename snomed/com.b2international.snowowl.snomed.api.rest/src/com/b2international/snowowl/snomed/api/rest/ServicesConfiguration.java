@@ -18,8 +18,10 @@ package com.b2international.snowowl.snomed.api.rest;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -74,8 +76,8 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import springfox.documentation.schema.AlternateTypeRule;
+import springfox.documentation.schema.WildcardType;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiListing;
 import springfox.documentation.service.ApiListingReference;
 import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
@@ -161,13 +163,18 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	            .ignoredParameterTypes(Principal.class, Void.class)
 	            .genericModelSubstitutes(ResponseEntity.class)
 	            .genericModelSubstitutes(DeferredResult.class)
-	            .alternateTypeRules(new AlternateTypeRule(resolver.resolve(UUID.class), resolver.resolve(String.class)))
-	            .directModelSubstitute(Branch.class, BranchMixin.class);
+	            .directModelSubstitute(Branch.class, BranchMixin.class)
+	            .directModelSubstitute(Map.class, Object.class)
+	            .directModelSubstitute(Metadata.class, Object.class)
+	            .directModelSubstitute(UUID.class, String.class)
+	            .alternateTypeRules(
+	            	new AlternateTypeRule(resolver.resolve(DeferredResult.class, resolver.resolve(ResponseEntity.class, WildcardType.class)), resolver.resolve(WildcardType.class))
+	            );
 	}
 	
 	private ApiInfo apiInfo() {
 		final Contact contact = new Contact("B2i Healthcare", "http://b2i.sg", apiContact);
-		return new ApiInfo(apiTitle, "TODO", apiVersion, apiTermsOfServiceUrl, contact, apiLicense, apiLicenseUrl);
+		return new ApiInfo(apiTitle, readApiDescription(), apiVersion, apiTermsOfServiceUrl, contact, apiLicense, apiLicenseUrl);
 	}
 
 	private String readApiDescription() {
