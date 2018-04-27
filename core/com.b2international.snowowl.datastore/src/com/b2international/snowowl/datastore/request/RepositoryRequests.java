@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 B2i Healthcare Pte Ltd, http://b2i.sg
+ * Copyright 2011-2018 B2i Healthcare Pte Ltd, http://b2i.sg
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,26 @@
  */
 package com.b2international.snowowl.datastore.request;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
 import com.b2international.snowowl.datastore.request.repository.RepositoryGetRequestBuilder;
 import com.b2international.snowowl.datastore.request.repository.RepositorySearchRequestBuilder;
 import com.b2international.snowowl.datastore.request.system.ServerInfoGetRequestBuilder;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * The central class of Snow Owl's terminology independent Java APIs.
  * @since 4.5
  */
+@Api(
+	tags= {"Admin"},
+	produces="application/json"
+)
+@Path("/admin")
 public final class RepositoryRequests {
 
 	private RepositoryRequests() {}
@@ -60,16 +72,31 @@ public final class RepositoryRequests {
 		return new RepositoryBulkReadRequestBuilder();
 	}
 	
+	@ApiOperation(
+		value="Returns all repositories",
+		httpMethod="GET"
+	)
+	@GET
+	@Path("/repositories")
 	public static RepositorySearchRequestBuilder prepareSearch() {
 		return new RepositorySearchRequestBuilder();
 	}
 	
-	public static RepositoryGetRequestBuilder prepareGet(String repositoryId) {
+	@ApiOperation(
+		value="Returns a repository by ID",
+		httpMethod="GET"
+	)
+	@GET
+	@Path("/repositories/{id}")
+	public static RepositoryGetRequestBuilder prepareGet(@ApiParam(name="id", required=true) String repositoryId) {
 		return new RepositoryGetRequestBuilder(repositoryId);
 	}
-	
+
+	@ApiOperation("Returns the current server information")
+	@GET
+	@Path("/info")
 	public static ServerInfoGetRequestBuilder prepareGetServerInfo() {
 		return new ServerInfoGetRequestBuilder();
 	}
-
+	
 }

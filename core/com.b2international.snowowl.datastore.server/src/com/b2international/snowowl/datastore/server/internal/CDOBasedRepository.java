@@ -111,7 +111,7 @@ public final class CDOBasedRepository extends DelegatingContext implements Inter
 	private final String toolingId;
 	private final String repositoryId;
 	private final Map<Long, RepositoryCommitNotification> commitNotifications = new MapMaker().makeMap();
-	private Health health = Health.RED;
+	private Health health = Health.GREEN;
 	private String diagnosis;
 	
 	CDOBasedRepository(String repositoryId, String toolingId, int mergeMaxResults, Environment env) {
@@ -124,7 +124,7 @@ public final class CDOBasedRepository extends DelegatingContext implements Inter
 		initializeBranchingSupport(mergeMaxResults);
 		bind(Repository.class, this);
 		bind(ClassLoader.class, env.service(RepositoryClassLoaderProviderRegistry.class).getClassLoader());
-		checkHealth();
+//		checkHealth();
 	}
 
 	@Override
