@@ -55,6 +55,13 @@ import com.mangofactory.swagger.plugin.EnableSwagger;
 import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
 import com.wordnik.swagger.model.ApiInfo;
 
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
+
 /**
  * The Spring configuration class for Snow Owl's internal REST services module.
  *
@@ -127,6 +134,17 @@ public class ServicesConfiguration extends WebMvcConfigurerAdapter {
 	@Value("${api.licenseUrl}")
 	public void setApiLicenseUrl(final String apiLicenseUrl) {
 		this.apiLicenseUrl = apiLicenseUrl;
+	}
+	
+	@Bean
+	public PrometheusMeterRegistry registry() {
+		final PrometheusMeterRegistry registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+		registry.config().commonTags("application", "Snow Owl");
+		new ClassLoaderMetrics().bindTo(registry);
+		new JvmGcMetrics().bindTo(registry);
+		new JvmMemoryMetrics().bindTo(registry);
+		new JvmThreadMetrics().bindTo(registry);
+		return registry;
 	}
 	
 	@Bean
